@@ -7,7 +7,8 @@
 
 BigCoreInput::BigCoreInput()
 	:
-	lock(false)
+	lock(false),
+	dataPosition(0)
 {}
 
 BigCoreInput::BigCoreInput(const std::string& filename)
@@ -21,16 +22,30 @@ BigCoreInput::~BigCoreInput()
 void BigCoreInput::openFile(const std::string& filename)
 {
 	std::ifstream file(filename, std::ios_base::binary);
-	// what should be read?
-    // RV: read everything but data
-    // RV: go through the file, read numberOfImages etc., read dataOrder, dataType, DO NOT READ data, REMEMBER where data start.
+	
+	std::ifstream file(filename);
+	if (!file)
+	{
+		throw "Unable to open file for reading!";
+	}
 
-    // RV:
-    // 1. precis HEADER a overit
-    // 2. precist id a length
-    // 3. pokud id != 8 (DATA), precist hodnoty v chunku, NEZAPOMINAT, ze hodnoty v chunku muzou byt kratsi nez length a maji specificky datovy typ urceny pomoci id
-    // 4. skok na dalsi chunk
-    // 5. pokud neni konec souboru, opakuj od 2
+	char buffer[CHUNK_LENGTH];
+
+	file.read(buffer, CHUNK_LENGTH);
+	if (!this->checkHeader(buffer))
+	{
+		throw "File format is not BIG format!";
+	}
+
+	uint64_t id, length;
+	while (!file.eof())
+	{
+		if (!this->readChunk(file, id, length) && !this->readData(file, id, length))
+		{
+			throw "Error while reading file!";
+		}
+	}
+	this->lock = true;
 }
 
 void BigCoreInput::readFile(const std::string& filename, uint64_t bytes)
@@ -40,34 +55,12 @@ void BigCoreInput::readFile(const std::string& filename, uint64_t bytes)
     // 2. volat metodu openFile(filename)
     // 3. volat metodu loadToMemory()
 
-	//this->setMemorySize(bytes);
-
-	//std::ifstream file(filename);
-	//if (!file)
-	//{
-	//	throw "Unable to open file for reading!";
-	//}
-
-	//char buffer[CHUNK_LENGTH];
-
-	//file.read(buffer, CHUNK_LENGTH);
-	//if (!this->checkHeader(buffer))
-	//{
-	//	throw "File format is not BIG format!";
-	//}
-
-	//uint64_t id, length;
-	//while (!file.eof())
-	//{
-	//	if (!this->readChunk(file, id, length) && !this->readData(file, id, length))
-	//	{
-	//		throw "Error while reading file!";
-	//	}
-	//}
-	//this->lock = true;
+	this->setMemorySize(bytes);
+	this->openFile(filename);
+	this->loadToMemory(filename);
 }
 
-void BigCoreInput::loadToMemory()
+void BigCoreInput::loadToMemory(const std::string& filename)
 {
     // RV:
     // 1. overit, ze se data vejdou do pameti, else return
@@ -75,19 +68,26 @@ void BigCoreInput::loadToMemory()
     // 3. posunout se v souboru na misto, kde zacinaji data (metoda openFile ho ulozila do promenne)
     // 4. nacist data
 
-    //if (this->dataLength + length <= this->memorySize)
-    //{
-    //    // allocate new memory and copy old data to it
-    //    char* data = new char[this->dataLength + length];
-    //    std::copy(this->data, this->data + this->dataLength, data);
+	std::ifstream file(filename, std::ios_base::binary);
+	uint64_t length;
+	file.seekg(this->dataPosition - CHUNK_LENGTH);
+	file.read((char*)&length, CHUNK_LENGTH);
 
-    //    // clear old data and assign new ones
-    //    this->clear();
-    //    this->data = data;
+    if (this->dataLength + length <= this->memorySize)
+    {
+        // allocate new memory and copy old data to it
+        char* data = new char[this->dataLength + length];
+        std::copy(this->data, this->data + this->dataLength, data);
+		
+        // clear old data and assign new ones
+        this->clear();
+        this->data = data;
 
-    //    // move pointer past already loaded data and load new ones
-    //    file.read(this->data + this->dataLength, length);
-    //}
+        // move pointer past already loaded data and load new ones
+        file.read(this->data + this->dataLength, length);
+		this->dataLength += length;
+		this->outermostEntitiesOffsets.push_back(this->dataLength);
+    }
 }
 
 // RV: template musi byt v hlavicce
@@ -109,6 +109,7 @@ template<typename T>
 const T* BigCoreInput::operator[](size_t index) const
 {
     // RV: tady jsem mel chybu, jako uzivatel chci ukazatel na outermost entity s indexem index (napriklad ukazatel na obrazek cislo 3), abych si z neho mohl dale brat hodnoty co potrebuju
+	// LB: tenhle return ale vrati i vsechny nasledujici obrazky
     return static_cast<const T*>(this->data + outermostEntitiesOffsets[index]);
 }
 
@@ -116,22 +117,24 @@ template<typename T>
 const T& BigCoreInput::at(uint64_t imageNum, uint64_t row, uint64_t column, uint64_t plane, uint64_t tileNum) const
 {
     // RV: musi byt ostre znamenko vetsi. Pokud mam napr. 3 obrazky, indexy jsou 0,1,2.
-	if (imageNum > this->numberOfImages)
+	// LB: musi byt >=, pokud budu v tvem pripade chtit obrazek s indexem 3, tak jsem out of bounds (pokud indexujem od nuly, na coz spoleham)
+	if (imageNum >= this->numberOfImages)
 		throw "Image number out of bound!";
 
-	if (row > this->imageHeight)
+	if (row >= this->imageHeight)
 		throw "Row out of bound!";
 
-	if (column > this->imageWidth)
+	if (column >= this->imageWidth)
 		throw "Column out of bound!";
 
-	if (plane > this->numberOfPlanes)
+	if (plane >= this->numberOfPlanes)
 		throw "Number of planes out of bound!";
 
-	if (tileNum > this->numberOfTiles)
+	if (tileNum >= this->numberOfTiles)
 		throw "Tile number out of bound!";
 
-    // RV: TODO: overit, zda jsou data v pameti a pokud ne, tak je nacist
+    // RV: TODO: overit, zda jsou data v pameti a pokud ne, tak je nacist 
+	// LB: odkud?
 
 	size_t index = 0;
 	if (!this->isUniformDataType())
@@ -155,6 +158,7 @@ const T* BigCoreInput::at(uint64_t index) const
     // RV:
     // viz operator[]
     // tady chci to same, ale s kontrolou, ze jsou data opravdu v pameti a pripadne odpovidajici entitu (napr obrazek nacist do pameti)
+	// LB: zase - nacist odkud?
 
 	// following logic only makes sence for uniform data types
 	// for non-uniform data type it would be computationally easier to use previous method -- see commented code
@@ -176,7 +180,7 @@ const T* BigCoreInput::at(uint64_t index) const
 	if (index >= this->dataLength / sizeof(T))
 		throw "Index out of bound!";
 
-	return static_cast<T>(this->data[index]);
+	return static_cast<const T*>(this->data + outermostEntitiesOffsets[index]);
 }
 
 template<typename T>
@@ -314,7 +318,7 @@ bool BigCoreInput::readData(std::ifstream &file, const uint64_t id, const uint64
     else if (cid == CoreChunkIds::DATA)
     {
         // RV: tady radeji jen ulozit pozici v souboru
-        this->loadToMemory(file, length);
+		this->dataPosition = file.tellg();
     }
     return !file.fail();
 }

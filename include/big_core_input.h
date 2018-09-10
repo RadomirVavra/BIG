@@ -33,7 +33,8 @@ public:
     // RV: Pokud se to nevejde, konkretni data se budou cist az na vyzadani a prectena data se zaroven ulozi do bufferu pro rychlejsi opakovany pristup.
     // RV: Casem treba pridame nejake funkce pro nacteni tile do bufferu, aby se pak mohlo rychle pristupovat pomoci []
     // RV: Neni potreba nastavovat jmeno souboru (ani to neni zadouci).
-    void loadToMemory();
+	// LB: nepredaval jsem jmeno souboru, ale soubor -- ale ted jak je to navrzene, musim predat jmeno souboru, z ceho by to jinak nacital
+    void loadToMemory(const std::string& filename);
 
     // LB:
     // All the four methods below are much more complicated -- not checking bounds doesn't seem right
@@ -75,7 +76,8 @@ public:
     // rather add method const T* getImage
     // RV: Opet kvuli maximalni rychlosti, uzivatel musi vedet co dela, ale nekdy to je proste treba. I std::vector ma tuto metodu.
     // RV: Uznavam, ze template nedava moc smysl, radeji vracet ukazatel na void.
-    const void * data() const;
+	// LB: data jso typu char, proc void*?
+    const char* data() const;
 
     // Returns tile specified by the number of image and the number of tile.
     // Data must be of size at least height x width x #planes x sizeof(T).
@@ -84,6 +86,7 @@ public:
     //T* getTile(uint64_t imageNum, uint64_t tileNum = 0);
     // RV: Libore, Tvoje verze by musela alokovat nove pole, kam by ulozila data. A uzivatel by ho pak musel dealokovat.
     // RV: Radeji bych volil verzi, kam uz posles alokovane pole (a musis si ho po sobe i uklidit)
+	// LB: v obou pripadech tu pamet potom musi dealokovat, nevidim v tom rozdil
     template<typename T>
     void getTile(T *data, uint64_t imageNum, uint64_t tileNum = 0);
 
@@ -93,6 +96,7 @@ public:
     //template<typename T>
     //std::vector<T> getTile(uint64_t imageNum, uint64_t tileNum = 0);
     // RV: Libore, ve Tve verzi bych musel vzdy zadavat datovy typ T, takto ho prekladac odvodi sam ze vstupne-vystupniho vektoru, viz big_core_test.cpp
+	// LB: v obou pripadech musi znat datovy typ, jaky chce, taky nevidim rozdil, akorat sev tomhle pripade pri volani mene pise :)
     template<typename T>
     void getTile(std::vector<T>& data, uint64_t imageNum, uint64_t tileNum = 0);
 
@@ -100,6 +104,7 @@ public:
 
 protected:
 
+	// LB: jestli tahle metoda ma byt protected, tak je zbytecne, aby byla staticka
     static bool checkHeader(const char* buffer);
     bool readChunk(std::ifstream& file, uint64_t& id, uint64_t& length);
     void checkDataIntegrity(uint64_t& thisData, const uint64_t loadedData);
@@ -107,7 +112,11 @@ protected:
 
 protected:
     // RV: lock mi prijde zbytecny. Pokud je soubor spatne vytvoren, proste to bude fungovat divne, ale stejne ho neopravime.
+	// LB: ja to myslel jinak, ve chvili kdy vytvarim instanci tehle tridy, muzu menit parametry,
+	// LB: ve chvili, kdy prdavam data z dalsiho souboru (aspon tak jsem pochopil, ze to ma fungovat), uz nemuzu menit parametry a zaroven ty parametry musi odpovidat puvodnim
+	// LB: tj. lock = true, viz readData a checkDataIntegrity
     bool lock;
+	uint64_t dataPosition;
 };
 
 #endif // _BIG_CORE_INPUT_H_

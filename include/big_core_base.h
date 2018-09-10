@@ -1,4 +1,5 @@
 #pragma once // RV: nicemu to nevadi a naprosta vetsina prekladacu to podporuje https://en.wikipedia.org/wiki/Pragma_once
+             // LB: ja vim, ale je zbytecne mit tohle a jeste include guarda
 #ifndef _BIG_CORE_BASE_H_
 #define _BIG_CORE_BASE_H_
 
@@ -29,7 +30,10 @@ enum class CoreChunkIds : uint64_t
 };
 
 // data type ids
-enum class DataTypes : uint8_t // RV: v big.pdf je jasne definovane, ze je to 8 bitu, protoze tam muze byt dlouhy vektor a usetrime trochu mista. Vice nez 255 datovych typu urcite nebude treba specifikovat.
+// RV: v big.pdf je jasne definovane, ze je to 8 bitu, protoze tam muze byt dlouhy vektor a usetrime trochu mista. Vice nez 255 datovych typu urcite nebude treba specifikovat.
+// LB: kvuli zarovnani dat v souboru na 8 bytu mi to prijde lepsi, nemusi se pak reit zarovni, proste to zarovnane bude, 
+// LB: 7 bajtu za obrazek navic si myslim nevadi (pro 1000 obrazku, je to zhruba 7MB, ale 1000 obrazku se do pameti nejspis ani nebude vejit)
+enum class DataTypes : uint8_t 
 {
     HALF = 1,
     FLOAT = 2,
@@ -90,7 +94,7 @@ public:
 
     // returns size of givne data type
     // RV: jmeno teto metody mi nejak nesedi s tim, co ma delat.
-    size_t getImageType(const uint64_t dataType);
+    size_t getTypeSize(const uint64_t dataType);
 
     // returns width * height * planes * tiles no matter data type
     // RV: je potreba pracovat spise s jednotlivymi dlazdicemi (tiles)
@@ -116,7 +120,7 @@ protected:
     uint64_t dataLength = 0;
     uint64_t memorySize = DEFAULT_MEMORY_SIZE;
 
-    std::vector<uint64_t> outermostEntitiesOffsets;
+	std::vector<uint64_t> outermostEntitiesOffsets = { 0 };
 };
 
 #endif // _BIG_CORE_BASE_H_
