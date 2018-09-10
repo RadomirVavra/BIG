@@ -29,6 +29,7 @@ namespace test
                 for (uint64_t tileNum = 0; tileNum < bigIn.getNumberOfTiles(); ++tileNum) {
                     std::vector<int> data;
                     bigIn.getTile(data, imageNum, tileNum);
+                    //data = bigIn.getTile<int>(imageNum, tileNum);
                     bigOut.addTile(data, imageNum, tileNum);
                 }
             }
