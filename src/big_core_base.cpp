@@ -1,5 +1,3 @@
-// #include <cstdint> RV: smazat, toto je nutne uz v hlavicce
-
 #include "../include/big_core_base.h"
 
 // RV: general question. Proc vsude pouzivas "this->..."? Osobne mi to prijde mene prehledne a nepouzival bych to. Ale predpokladam, ze pro Tebe to bude naopak. Nebo je jiny duvod?
@@ -10,9 +8,6 @@
 // RV: general comment. V cpp souborech dodrzuj prosim pokud mozno stejne poradi metod jako v hlavickovem souboru. Lepe se pak hleda a kontroluje, co je naimplementovano.
 
 BigCoreBase::BigCoreBase()
-    // RV: nasledujici dva radky bych smazal, nevim proc tam cokoli nastavovat, dokud nemam parametry (rozmery, datove typy, atd.)
-	//:
-	//outermostEntitiesOffsets(0)
 {}
 
 BigCoreBase::~BigCoreBase()
@@ -50,7 +45,7 @@ const std::vector<uint64_t>& BigCoreBase::getDataOrder()
     return dataOrder;
 }
 
-const std::vector<uint8_t>& BigCoreBase::getDataType()
+const std::vector<uint64_t>& BigCoreBase::getDataType()
 {
     return dataType;
 }
