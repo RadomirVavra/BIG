@@ -58,13 +58,12 @@ bool BigCoreBase::isEmpty()
 void BigCoreBase::clear()
 {
 	if (this->data) delete[] this->data;
-	this->dataLength = 0;
 }
 
 bool BigCoreBase::isInMemory()
 {
-	// TODO: implement
-	;
+	if(this->data) return true;
+	return false;
 }
 
 void BigCoreBase::setMemorySize(uint64_t bytes)
