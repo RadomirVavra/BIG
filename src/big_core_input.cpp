@@ -171,23 +171,16 @@ void BigCoreInput::getTile(T* data, uint64_t imageNum, uint64_t tileNum)
 		throw "Number of tiles out of bound!";
 
 	// first do some preparation
-	uint64_t iterators[] = { 0, 0, 0, 0, 0 };
-	uint64_t stoppers[5];
+	uint64_t iterators[] = { 0, 0, 0 };
+	uint64_t stoppers[3];
+	size_t index = 0;
 	for (size_t i = 0; i < 5; i++)
 	{
-		// fix tile and image in order not to be iterated over
-		if (this->dataOrder[i] == 1)
+		if (this->dataOrder[i] != 1 && this->dataOrder[i] != 2)
 		{
-			iterators[i] = imageNum;
-			stoppers[i] = imageNum + 1;
+			stoppers[index] = this->permutation[i];
+			index++;
 		}
-		else if (this->dataOrder[i] == 2)
-		{
-			iterators[i] = tileNum;
-			stoppers[i] = tileNum + 1;
-		}
-		else
-			stoppers[i] = this->permutation[i];
 	}
 
 	uint64_t imageStart = this->outermostEntitiesOffsets[imageNum];
@@ -197,16 +190,7 @@ void BigCoreInput::getTile(T* data, uint64_t imageNum, uint64_t tileNum)
 		{
 			for (iterators[2]; iterators[2] < stoppers[2]; iterators[2]++)
 			{
-				for (iterators[3]; iterators[3] < stoppers[3]; iterators[3]++)
-				{
-					for (iterators[4]; iterators[4] < stoppers[4]; iterators[4]++)
-					{
-						// now we need to count offset for inner most entity
-						uint64_t offset = 1;
-						for (size_t i = 0; i < 5; i++)
-							offset *= iterators[i];
-					}
-				}
+				// TODO
 			}
 		}
 	}
