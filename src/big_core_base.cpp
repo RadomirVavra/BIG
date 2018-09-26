@@ -115,3 +115,15 @@ bool BigCoreBase::isUniformDataType()
 	return this->dataType.size() == 1 ? true : false;
 }
 
+void BigCoreBase::setPermutation()
+{
+	for (size_t i = 0; i < 5; i++)
+	{
+		uint64_t order = this->dataOrder[i];
+		if (order == 1) this->permutation[i] = this->numberOfImages;
+		else if (order == 2) this->permutation[i] = this->numberOfTiles;
+		else if (order == 3) this->permutation[i] = this->imageHeight;
+		else if (order == 4) this->permutation[i] = this->imageWidth;
+		else this->permutation[i] = this->numberOfPlanes;
+	}
+}

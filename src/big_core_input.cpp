@@ -39,6 +39,9 @@ void BigCoreInput::openFile(const std::string& filename)
 		throw "File format is not BIG format!";
 	}
 
+	// this vector must be empty before loading any data!
+	this->dataType.clear();
+
 	uint64_t id, length;
 	while (!file.eof())
 	{
@@ -48,6 +51,7 @@ void BigCoreInput::openFile(const std::string& filename)
 		}
 	}
 
+	this->setPermutation();
 	this->fillEntities();
 }
 
@@ -85,6 +89,9 @@ template<typename T>
 const T& BigCoreInput::operator()(uint64_t imageNum, uint64_t row, uint64_t column, uint64_t plane, uint64_t tileNum) const
 {
 	uint64_t dataTypeIndex = this->isUniformDataType() ? 0 : imageNum;
+	// TODO: this must be adjusted according to data order. Would only work for image being outermost entity
+	// part this->data[this->outermostEntitiesOffsets[imageNum]] is alright, as it points directly to the first
+	// element of the image. The rest is wrong.
 	return static_cast<const T>(this->data[this->outermostEntitiesOffsets[imageNum] + row * column * plane * tileNum * this->getImageType(this->dataType[dataTypeIndex])]);
 }
 
@@ -112,13 +119,15 @@ const T& BigCoreInput::at(uint64_t imageNum, uint64_t row, uint64_t column, uint
 	if (tileNum >= this->numberOfTiles)
 		throw "Tile number out of bound!";
 
+	int64_t offset = this->outermostEntitiesOffsets[imageNum];
+
 	uint64_t dataTypeIndex = this->isUniformDataType() ? 0 : imageNum;
 	if (this->isInMemory())
 	{
-		return static_cast<const T>(this->data[this->outermostEntitiesOffsets[imageNum] + row * column * plane * tileNum * this->getImageType(this->dataType[dataTypeIndex])]);
+		return static_cast<const T>(this->data[offset + row * column * plane * tileNum * this->getImageType(this->dataType[dataTypeIndex])]);
 	}
 
-	this->file.seekg(this->dataPosition + this->outermostEntitiesOffsets[imageNum]);
+	this->file.seekg(this->dataPosition + offset);
 	uint64_t size = this->outermostEntitiesOffsets[imageNum + 1] - this->outermostEntitiesOffsets[imageNum];
 	char* ret = new char[size];
 	this->file.read(ret, size);
@@ -133,13 +142,15 @@ const T* BigCoreInput::at(uint64_t index) const
 		throw "Index out of bound!";
 	}
 
+	uint64_t offset = this->outermostEntitiesOffsets[index];
+
 	if (this->isInMemory())
 	{
-		return static_cast<const T*>(this->data + outermostEntitiesOffsets[index]);
+		return static_cast<const T*>(this->data + offset);
 	}
 
-	this->file.seekg(this->dataPosition + index);
-	uint64_t size = this->dataLength - index <= this->memorySize ? this->dataLength - index : this->memorySize;
+	this->file.seekg(this->dataPosition + offset);
+	uint64_t size = this->dataLength - offset <= this->memorySize ? this->dataLength - offset : this->memorySize;
 	char* ret = new char[size];
 	this->file.read(ret, size);
 	return static_cast<const T*>(ret);
@@ -159,26 +170,31 @@ void BigCoreInput::getTile(T* data, uint64_t imageNum, uint64_t tileNum)
 	if (tileNum >= this->numberOfTiles)
 		throw "Number of tiles out of bound!";
 
-	size_t dataSize = this->imageWidth * this->imageHeight * this->numberOfPlanes;
-    // RV: zde je prave ta alokace dat, ktera je trochu problem, protoze uzivatel pak pravdepodobne zapomene uklidit
-    // RV: radeji tedy verzi, kde uzivatel uz musi predat alokovane pole, do ktereho se data jen zapisi
-	// data = new T[dataSize];
+	// first do some preparation
+	uint64_t iterators[] = { 0, 0, 0 };
+	uint64_t stoppers[3];
+	size_t index = 0;
+	for (size_t i = 0; i < 5; i++)
+	{
+		if (this->dataOrder[i] != 1 && this->dataOrder[i] != 2)
+		{
+			stoppers[index] = this->permutation[i];
+			index++;
+		}
+	}
 
-	// RV: tady to bohuzel nebude tak jednoduche. Toto jsem prave myslel tou "slozitou" metodou. Musi se vyzobat jednotlive elementy a poskladat do pole
-	//size_t ptr = 0;
-	//if (!this->isUniformDataType)
-	//{
-	//	for (size_t i = 0; i < imageNum; i++)
-	//	{
-	//		ptr += this->imageSize(this->dataType[i]);
-	//	}
-	//}
-	//else
-	//	ptr = this->imageSize(this->dataType[0]) * imageNum;
+	uint64_t imageStart = this->outermostEntitiesOffsets[imageNum];
+	for (iterators[0]; iterators[0] < stoppers[0] iterators[0]++)
+	{
+		for (iterators[1]; iterators[1] < stoppers[1]; iterators[1]++])
+		{
+			for (iterators[2]; iterators[2] < stoppers[2]; iterators[2]++)
+			{
+				// TODO
+			}
+		}
+	}
 
-	//ptr += dataSize * tileNum;
-
-	//std::copy(this->data + ptr, this->data + ptr + dataSize, tileData);
 	return tileData;
 }
 
@@ -214,10 +230,22 @@ void BigCoreInput::getTile(std::vector<T>& data, uint64_t imageNum, uint64_t til
 
 void BigCoreInput::fillEntities()
 {
-	uint64_t offset = 0;
-	for (uint64_t dType : this->dataType)
+	uint64_t difference = 1;
+
+	// this computes difference between starts of images. For example it images were inner most entities, 
+	// their first elements would be aligned in memory therefore we always need to count outtermostEntities like this
+	// otherise we might miss some elements
+	for (size_t i = 4; i >= 0; --i)
 	{
-		offset += this->imageSize(dType);
+		if (this->dataOrder[i] == 1) break;
+
+		difference *= this->permutation[i];
+	}
+
+	uint64_t offset = this->outermostEntitiesOffsets[0];
+	for (size_t i = 0; i < this->numberOfImages; i++)
+	{
+		offset += difference;
 		this->outermostEntitiesOffsets.push_back(offset);
 	}
 }
@@ -269,9 +297,13 @@ bool BigCoreInput::readData(std::ifstream &file, const uint64_t id, const uint64
     }
     else if (cid == CoreChunkIds::DATA_TYPE)
     {
-        uint64_t dt;
-        file.read((char*)&dt, length);
-        this->dataType.push_back(dt);
+		uint64_t dt;
+		// works for both uniform and nonuniform data types
+		for (size_t i = 0; i < length / CHUNK_LENGTH; i++)
+		{
+			file.read((char*)&dt, CHUNK_LENGTH);
+			this->dataType.push_back(dt);
+		}
     }
     else if (cid == CoreChunkIds::DATA)
     {
