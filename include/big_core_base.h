@@ -96,6 +96,10 @@ public:
     bool isUniformDataType();
 
 protected:
+	// callthis method only when all parameters are set
+	void setPermutation();
+
+protected:
     uint64_t numberOfImages = 0;
     uint64_t numberOfTiles = 1;
     uint64_t imageHeight = 0;
@@ -109,6 +113,7 @@ protected:
     uint64_t memorySize = DEFAULT_MEMORY_SIZE;
 
 	std::vector<uint64_t> outermostEntitiesOffsets = { 0 };
+	std::vector<uint64_t> permutation = { 0, 0, 0, 0, 0 };
 };
 
 #endif // _BIG_CORE_BASE_H_
