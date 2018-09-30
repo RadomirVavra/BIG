@@ -23,6 +23,8 @@ BigCoreInput::~BigCoreInput()
 
 void BigCoreInput::openFile(const std::string& filename)
 {
+	this->dataType.clear();
+
 	this->file.open(filename, std::ios_base::binary);
 	
 	std::ifstream file(filename);
@@ -49,15 +51,11 @@ void BigCoreInput::openFile(const std::string& filename)
 	}
 
 	this->fillEntities();
+	this->setPermutations();
 }
 
 void BigCoreInput::readFile(const std::string& filename, uint64_t bytes)
 {
-    // RV:
-    // 1. volat metodu setMemorySize(bytes)
-    // 2. volat metodu openFile(filename)
-    // 3. volat metodu loadToMemory()
-
 	this->setMemorySize(bytes);
 	this->openFile(filename);
 	this->loadToMemory();
@@ -65,12 +63,6 @@ void BigCoreInput::readFile(const std::string& filename, uint64_t bytes)
 
 void BigCoreInput::loadToMemory()
 {
-    // RV:
-    // 1. overit, ze se data vejdou do pameti, else return
-    // 2. alokovat prislusne velkou pamet
-    // 3. posunout se v souboru na misto, kde zacinaji data (metoda openFile ho ulozila do promenne)
-    // 4. nacist data
-
 	this->clear();
     if (this->dataLength <= this->memorySize)
     {
@@ -85,7 +77,20 @@ template<typename T>
 const T& BigCoreInput::operator()(uint64_t imageNum, uint64_t row, uint64_t column, uint64_t plane, uint64_t tileNum) const
 {
 	uint64_t dataTypeIndex = this->isUniformDataType() ? 0 : imageNum;
-	return static_cast<const T>(this->data[this->outermostEntitiesOffsets[imageNum] + row * column * plane * tileNum * this->getImageType(this->dataType[dataTypeIndex])]);
+	uint64_t dataSize = this->getTypeSize(dataTypeIndex);
+	uint64_t tileOffset = this->outermostEntitiesOffsets[imageNum] + tileNum * this->imageHeight * this->imageWidth * this->numberOfPlanes * dataSize;
+
+	uint64_t tileOrder[] = { 0, 0, 0 };
+	for(size_t i = 0; i < 3; i++)
+	{ 
+		uint64_t order = this->dataOrder[i + 2];
+		if (order == 3) tileOrder[i] = row;
+		else if (order == 4) tileOrder[i] = column;
+		else if (order == 5) tileOrder[i] = plane;
+	}
+	uint64_t inTileOffset = tileOrder[0] * this->permutations[1] * this->permutations[2] + tileOrder[1] * this->permutations[2] + tileOrder[2];
+
+	return static_cast<const T>(this->data[tileOffset + inTileOffset * dataSize]);
 }
 
 template<typename T>
@@ -113,13 +118,28 @@ const T& BigCoreInput::at(uint64_t imageNum, uint64_t row, uint64_t column, uint
 		throw "Tile number out of bound!";
 
 	uint64_t dataTypeIndex = this->isUniformDataType() ? 0 : imageNum;
+	uint64_t dataSize = this->getTypeSize(dataTypeIndex);
+	uint64_t tileOffset = this->outermostEntitiesOffsets[imageNum] + tileNum * this->imageHeight * this->imageWidth * this->numberOfPlanes * dataSize;
+
+	uint64_t tileOrder[] = { 0, 0, 0 };
+	for (size_t i = 0; i < 3; i++)
+	{
+		uint64_t order = this->dataOrder[i + 2];
+		if (order == 3) tileOrder[i] = row;
+		else if (order == 4) tileOrder[i] = column;
+		else if (order == 5) tileOrder[i] = plane;
+	}
+	uint64_t inTileOffset = tileOrder[0] * this->permutations[1] * this->permutations[2] + tileOrder[1] * this->permutations[2] + tileOrder[2];
+
 	if (this->isInMemory())
 	{
-		return static_cast<const T>(this->data[this->outermostEntitiesOffsets[imageNum] + row * column * plane * tileNum * this->getImageType(this->dataType[dataTypeIndex])]);
+		return static_cast<const T>(this->data[tileOffset + inTileOffset * dataSize]);
 	}
 
-	this->file.seekg(this->dataPosition + this->outermostEntitiesOffsets[imageNum]);
-	uint64_t size = this->outermostEntitiesOffsets[imageNum + 1] - this->outermostEntitiesOffsets[imageNum];
+	this->file.seekg(this->dataPosition + tileOffset + inTileOffset * dataSize);
+
+	// rest of the image
+	uint64_t size = this->outermostEntitiesOffsets[imageNum + 1] - this->outermostEntitiesOffsets[imageNum] - tileOffset + inTileOffset * dataSize;
 	char* ret = new char[size];
 	this->file.read(ret, size);
 	return static_cast<const T>(ret);
@@ -159,27 +179,23 @@ void BigCoreInput::getTile(T* data, uint64_t imageNum, uint64_t tileNum)
 	if (tileNum >= this->numberOfTiles)
 		throw "Number of tiles out of bound!";
 
-	size_t dataSize = this->imageWidth * this->imageHeight * this->numberOfPlanes;
-    // RV: zde je prave ta alokace dat, ktera je trochu problem, protoze uzivatel pak pravdepodobne zapomene uklidit
-    // RV: radeji tedy verzi, kde uzivatel uz musi predat alokovane pole, do ktereho se data jen zapisi
-	// data = new T[dataSize];
+	uint64_t index = this->dataType.size() == 1 ? 0 : imageNum;
+	size_t dataSize = this->getTypeSize(this->dataType[index]);
 
-	// RV: tady to bohuzel nebude tak jednoduche. Toto jsem prave myslel tou "slozitou" metodou. Musi se vyzobat jednotlive elementy a poskladat do pole
-	//size_t ptr = 0;
-	//if (!this->isUniformDataType)
-	//{
-	//	for (size_t i = 0; i < imageNum; i++)
-	//	{
-	//		ptr += this->imageSize(this->dataType[i]);
-	//	}
-	//}
-	//else
-	//	ptr = this->imageSize(this->dataType[0]) * imageNum;
-
-	//ptr += dataSize * tileNum;
-
-	//std::copy(this->data + ptr, this->data + ptr + dataSize, tileData);
-	return tileData;
+	// compute tile offset in data
+	uint64_t tileOffset = this->outermostEntitiesOffsets[imageNum] + tileNum * this->getImageWidth * this->imageHeight * numberOfPlanes * dataSize;
+	for (size_t i = 0; i < this->permutations[0]; i++)
+	{
+		uint64_t first_offset = i * this->permutations[1] * this->permutations[2];
+		for (size_t j = 0; j < this->permutations[1]; j++)
+		{
+			uint64_t second_offset = j * this->permutations[2];
+			for (size_t k = 0; k < this->permutations[2]; k++)
+			{
+				data[first_offset + second_offset + k] = static_cast<T>(this->data[tileOffset + (first_offset + second_offset + k) * dataSize]);
+			}
+		}
+	}
 }
 
 template<typename T>
@@ -190,26 +206,24 @@ void BigCoreInput::getTile(std::vector<T>& data, uint64_t imageNum, uint64_t til
 
 	if (tileNum >= this->numberOfTiles)
 		throw "Number of tiles out of bound!";
+	
+	uint64_t index = this->dataType.size() == 1 ? 0 : imageNum;
+	size_t dataSize = this->getTypeSize(this->dataType[index]);
 
-	size_t dataSize = this->imageWidth * this->imageHeight * this->numberOfPlanes;
-	// std::vector<T> tileData = std::vector<T>();
-
-    // RV: takto ne, opet "slozita" metoda, viz vyse
-	//size_t ptr = 0;
-	//if (!this->isUniformDataType)
-	//{
-	//	for (size_t i = 0; i < imageNum; i++)
-	//	{
-	//		ptr += this->imageSize(this->dataType[i]);
-	//	}
-	//}
-	//else
-	//	ptr = this->imageSize(this->dataType[0]) * imageNum;
-
-	//ptr += dataSize * tileNum;
-
-	//std::copy(this->data + ptr, this->data + ptr + dataSize, tileData);
-	return tileData;
+	// compute tile offset in data
+	uint64_t tileOffset = this->outermostEntitiesOffsets[imageNum] + tileNum * this->getImageWidth * this->imageHeight * numberOfPlanes * dataSize;
+	for (size_t i = 0; i < this>permutations[0]; i++)
+	{
+		uint64_t first_offset = i * this->permutations[1] * this->permutations[2];
+		for (size_t j = 0; j < this->permutations[1]; j++)
+		{
+			uint64_t second_offset = j * permutations[2];
+			for (size_t k = 0; k < this->permutaions[2]; k++)
+			{
+				data.push_back(static_cast<T>(this->data[tileOffset + (first_offset + second_offset + k]) * dataSize));
+			}
+		}
+	}
 }
 
 void BigCoreInput::fillEntities()
@@ -270,8 +284,11 @@ bool BigCoreInput::readData(std::ifstream &file, const uint64_t id, const uint64
     else if (cid == CoreChunkIds::DATA_TYPE)
     {
         uint64_t dt;
-        file.read((char*)&dt, length);
-        this->dataType.push_back(dt);
+		for (size_t i = 0; i < length / CHUNK_LENGTH; i++)
+		{
+			file.read((char*)&dt, length);
+			this->dataType.push_back(dt);
+		}
     }
     else if (cid == CoreChunkIds::DATA)
     {

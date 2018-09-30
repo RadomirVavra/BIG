@@ -115,3 +115,14 @@ bool BigCoreBase::isUniformDataType()
 	return this->dataType.size() == 1 ? true : false;
 }
 
+void BigCoreBase::setPermutations()
+{
+	const size_t offset = 2;
+	for (size_t i = 0; i < 3; i++)
+	{
+		uint64_t order = this->dataOrder[offset + i];
+		if (order == 3) this->permutations[i] = this->imageWidth;
+		else if (order == 4) this->permutations[i] = this->imageHeight;
+		else if (order == 5) this->permutations[i] = this->numberOfPlanes;
+	}
+}
