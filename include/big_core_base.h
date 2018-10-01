@@ -52,19 +52,23 @@ protected:
 public:
     ~BigCoreBase();
 
-    // getters
-    // todo: provide comments of individual methods
-    uint64_t getNumberOfImages();
-    uint64_t getNumberOfTiles();
-    uint64_t getImageHeight();
-    uint64_t getImageWidth();
-    uint64_t getNumberOfPlanes();
-
-    const std::vector<uint64_t>& getDataOrder();
-    const std::vector<uint64_t>& getDataType();
+    // Returns number of contained images
+    uint64_t getNumberOfImages() { return numberOfImages; }
+    // Returns number of tiles that each image contains
+    uint64_t getNumberOfTiles() { return numberOfTiles; }
+    // Returns height of tile
+    uint64_t getImageHeight() { return imageHeight; }
+    // Returns width of tile
+    uint64_t getImageWidth() { return imageWidth; }
+    // Returns number of (color) planes
+    uint64_t getNumberOfPlanes() { return numberOfPlanes; }
+    // Returns order in which the data are serialized into memory
+    const std::vector<uint64_t>& getDataOrder() { return dataOrder; }
+    // Returns type of data
+    const std::vector<uint64_t>& getDataType() { return dataType; }
 
     // Checks whether the container is empty. Returns true until memory is allocated.
-    bool isEmpty();
+    bool isEmpty() { return dataLength == 0; }
 
     // Frees memory. In case of output class, enables to change dimensions, data order or data types.
     void clear();
@@ -106,7 +110,7 @@ protected:
     uint64_t numberOfPlanes = 1;
     std::vector<uint64_t> dataOrder = { 1, 2, 3, 4, 5 };
     std::vector<uint64_t> dataType = { 2 };
-    char *data = nullptr;
+    char *_data = nullptr;
 
     uint64_t dataLength = 0;
     uint64_t memorySize = DEFAULT_MEMORY_SIZE;
