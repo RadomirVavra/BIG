@@ -1,81 +1,99 @@
 #include "../include/big_core_base.h"
 
-BigCoreBase::BigCoreBase()
-{}
-
 BigCoreBase::~BigCoreBase()
 {
-    clear();
+    delete[] _data;
 }
 
 void BigCoreBase::clear()
 {
-	delete[] _data;
+    numberOfImages = 0;
+    imageHeight = 0;
+    imageWidth = 0;
+    numberOfPlanes = 1;
+    dataOrder = { DataOrderIds::NUMBER_OF_IMAGES, DataOrderIds::IMAGE_HEIGHT, DataOrderIds::IMAGE_WIDTH, DataOrderIds::NUMBER_OF_PLANES };
+    dataType = { DataTypes::FLOAT };
+    delete[] _data;
+    _data = nullptr;
+    dataSize = 0;
+    memorySize = 0;
 }
 
-bool BigCoreBase::isInMemory()
+void BigCoreBase::setSupportingStructures()
 {
-	if(this->data) return true;
-	return false;
+    setDimensions();
+    setEntityTypeSizes();
+    setSubSizes();
+    setDataSize();
+    setOffsets();
+    setOrderMap();
 }
 
-void BigCoreBase::setMemorySize(uint64_t bytes)
+void BigCoreBase::setDimensions()
 {
-	this->memorySize = bytes;
+    dimensions.clear();
+    for (auto it = dataOrder.cbegin(); it != dataOrder.cend(); ++it) {
+        switch (*it) {
+        case DataOrderIds::NUMBER_OF_IMAGES:
+            dimensions.push_back(numberOfImages);
+            break;
+        case DataOrderIds::IMAGE_HEIGHT:
+            dimensions.push_back(imageHeight);
+            break;
+        case DataOrderIds::IMAGE_WIDTH:
+            dimensions.push_back(imageWidth);
+            break;
+        case DataOrderIds::NUMBER_OF_PLANES:
+            dimensions.push_back(numberOfPlanes);
+            break;
+        }
+    }
 }
 
-size_t BigCoreBase::size()
+void BigCoreBase::setEntityTypeSizes()
 {
-	return this->dataLength;
+    entityTypeSizes.clear();
+    if (dataType.size() == 1) {
+        entityTypeSizes.resize(dimensions[0], typeSizes[static_cast<uint64_t>(dataType[0])]);
+    }
+    else {
+        for (uint64_t i = 1; i != dataType.size(); ++i) {
+            entityTypeSizes.push_back(typeSizes[static_cast<uint64_t>(dataType[i])]);
+        }
+    }
 }
 
-size_t BigCoreBase::sizeInMemory()
+void BigCoreBase::setSubSizes()
 {
-	return this->dataLength;
+    uint64_t n = dimensions.size();
+    subSizes.resize(n);
+    subSizes[n - 1] = 1;
+    for (uint64_t i = n - 1; i != 0; --i) {
+        subSizes[i - 1] = subSizes[i] * dimensions[i];
+    }
 }
 
-size_t BigCoreBase::getTypeSize(const uint64_t dataType)
+void BigCoreBase::setDataSize()
 {
-	DataTypes dType = static_cast<DataTypes>(dataType);
-
-	if (dType == DataTypes::CHAR || dType == DataTypes::UNSIGNED_CHAR || dType == DataTypes::BOOL)
-		return 1;
-
-	if (dType == DataTypes::SHORT || dType == DataTypes::UNSIGNED_SHORT || dType == DataTypes::HALF)
-		return 2;
-
-	if (dType == DataTypes::FLOAT || dType == DataTypes::INT || dType == DataTypes::UNSIGNED_INT)
-		return 4;
-
-	if (dType == DataTypes::DOUBLE || dType == DataTypes::LONG_LONG || dType == DataTypes::UNSIGNED_LONG_LONG)
-		return 8;
-
-	return 0;
+    dataSize = 0;
+    for (auto it = entityTypeSizes.cbegin(); it != entityTypeSizes.cend(); ++it) {
+        dataSize += subSizes[0] * *it;
+    }
 }
 
-size_t BigCoreBase::imageSizeRaw()
+void BigCoreBase::setOffsets()
 {
-	return this->imageWidth * this->imageHeight * this->numberOfPlanes * this->numberOfTiles;
+    uint64_t offset = 0;
+    for (uint64_t i = 0; i != dimensions[0]; ++i) {
+        offsets.push_back(offset);
+        offset += subSizes[0] * entityTypeSizes[i];
+    }
 }
 
-size_t BigCoreBase::imageSize(const uint64_t dataType)
+void BigCoreBase::setOrderMap()
 {
-	return this->getTypeSize(dataType) * this->imageSizeRaw();	
-}
-
-bool BigCoreBase::isUniformDataType()
-{
-	return this->dataType.size() == 1 ? true : false;
-}
-
-void BigCoreBase::setPermutations()
-{
-	const size_t offset = 2;
-	for (size_t i = 0; i < 3; i++)
-	{
-		uint64_t order = this->dataOrder[offset + i];
-		if (order == 3) this->permutations[i] = this->imageWidth;
-		else if (order == 4) this->permutations[i] = this->imageHeight;
-		else if (order == 5) this->permutations[i] = this->numberOfPlanes;
-	}
+    orderMap.clear();
+    for (uint64_t i = 0; i != dataOrder.size(); ++i) {
+        orderMap[dataOrder[i]] = i;
+    }
 }

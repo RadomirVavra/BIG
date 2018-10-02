@@ -9,8 +9,9 @@
 class BigCoreInput : public BigCoreBase
 {
 public:
+
     // Empty constructor. Constructs an empty container, with no elements.
-    BigCoreInput();
+    BigCoreInput() {}
 
     // Input constructor. Opens file, reads parameters of the container, but does not read data.
     BigCoreInput(const std::string& fileName);
@@ -18,59 +19,64 @@ public:
     // Copy constructor forbidden.
     BigCoreInput(const BigCoreInput &) = delete;
 
-    // destructor
+    // Destructor.
     ~BigCoreInput();
+
+    // Assignment operator forbidden.
+    BigCoreInput &operator=(const BigCoreInput &) = delete;
 
     // Opens file, reads parameters of the container, but does not read data.
     void openFile(const std::string& fileName);
 
-    // Sets maximum possible size of memory that can be used and opens file, reads parameters and data to memory, if possible.
-    void readFile(const std::string& fileName, uint64_t bytes = DEFAULT_MEMORY_SIZE);
+    // Opens file, reads parameters and data to memory, if possible.
+    void readFile(const std::string& fileName);
 
-    // If possible, loads all data to memory. Does nothing if data are bigger than memory size. 
+    // Sets maximum possible size of memory that can be used and opens file, reads parameters and data to memory, if possible.
+    void readFile(const std::string& fileName, uint64_t bytes);
+
+    // Loads all data to memory, if possible. Does nothing if data are bigger than memory size. 
     void loadToMemory();
 
-    // Access element in given image at given row, column, (color) plane and in given tile. Does not check bounds.
-    template<typename T>
-    const T & operator() (uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0, uint64_t tileNum = 0) const;
+    // Returns a direct pointer to the memory array used internally by the container to store its owned elements.
+    const char* data() const { return _data; }
 
-    // Access the outermost entity of the container. If uniformDataType() is true, does not check bounds.
+    // Access element in a given image at given row, column and (color) plane. Does not check bounds.
+    template<typename T>
+    const T & operator() (uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0) const;
+
+    // Access the outermost entity of the container. Does not check bounds.
     template<typename T>
     const T * operator[] (uint64_t index) const;
 
-    // Access element in given image at given row, column, (color) plane and in given tile. Checks bounds.
+    // Access element in a given image at given row, column and (color) plane. Checks bounds.
     template<typename T>
-    const T & at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0, uint64_t tileNum = 0) const;
+    const T & at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0) const;
 
     // Access the outermost entity of the container. Checks bounds.
     template<typename T>
     const T * at(uint64_t index) const;
 
-    // Returns a direct pointer to the memory array used internally by the container to store its owned elements.
-    const char* data() const;
-
-    // Returns tile specified by the number of image and the number of tile.
+    // Returns an image specified by its number.
     // Data must be of size at least height x width x #planes x sizeof(T).
     template<typename T>
-    void getTile(T *data, uint64_t imageNum, uint64_t tileNum = 0);
+    void getImage(T *data, uint64_t imageNum);
 
-
-    // Returns tile specified by the number of image and the number of tile.
+    // Returns an image specified by its number.
     template<typename T>
-    void getTile(std::vector<T>& data, uint64_t imageNum, uint64_t tileNum = 0);
-
-    // todo: introduce constant iterators to iterate through tiles from first tile of the first image to last tile of the last image.
+    void getImage(std::vector<T>& data, uint64_t imageNum);
 
 protected:
 
-	void fillEntities();
-    bool checkHeader(const char* buffer);
-    bool readChunk(std::ifstream& file, uint64_t& id, uint64_t& length);
-    bool readData(std::ifstream& file, const uint64_t id, const uint64_t length);
+    // Reads chunk's id and its length.
+    std::ifstream& readChunk(std::ifstream& file, CoreChunkIds& id, uint64_t& length);
+
+    // Reads chunk's data, e.g., numberOfImages, imageHeight, etc. Does not read the data itself, just remembers its position.
+    std::ifstream& readData(std::ifstream& file, CoreChunkIds id, uint64_t length);
 
 protected:
-	uint64_t dataPosition;
-	std::ifstream file;
+
+    uint64_t dataPosition = 0;          // position of the data array in a file
+    std::ifstream file;                 // attached file
 };
 
 #endif // _BIG_CORE_INPUT_H_
