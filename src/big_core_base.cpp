@@ -1,120 +1,99 @@
-// #include <cstdint> RV: smazat, toto je nutne uz v hlavicce
-
 #include "../include/big_core_base.h"
-
-// RV: general question. Proc vsude pouzivas "this->..."? Osobne mi to prijde mene prehledne a nepouzival bych to. Ale predpokladam, ze pro Tebe to bude naopak. Nebo je jiny duvod?
-// RV: general comment. Pri pouziti struktury "if (condition) statement" bud davej vse na jeden radek nebo prosim pouzivej { }. Pokud je to na vice radku bez slozenych zavorek, delam pak nekdy chybu, ze pripisu dalsi statement da dalsi radek a zapomenu pridat { }. Diky
-// RV: general comment. Vsechny komentare, ktere pravdepodobne nebudou soucasti finalni verze a jsou to spise otazky nebo odpovedi na me komentare prosim oznacuj inicialy LB, podobne jako to delam ja. Takoveto komentare mohou byt cesky bez diakritiky.
-// RV: general comment. V cpp souborech dodrzuj prosim pokud mozno stejne poradi metod jako v hlavickovem souboru. Lepe se pak hleda a kontroluje, co je naimplementovano.
-
-BigCoreBase::BigCoreBase()
-    // RV: nasledujici dva radky bych smazal, nevim proc tam cokoli nastavovat, dokud nemam parametry (rozmery, datove typy, atd.)
-	//:
-	//outermostEntitiesOffsets(0)
-{}
 
 BigCoreBase::~BigCoreBase()
 {
-    if (this->data) delete[] this->data;
-}
-
-uint64_t BigCoreBase::getNumberOfImages()
-{
-	return this->numberOfImages;
-}
-
-uint64_t BigCoreBase::getNumberOfTiles()
-{
-	return this->numberOfTiles;
-}
-
-uint64_t BigCoreBase::getImageHeight()
-{
-	return this->imageHeight;
-}
-
-uint64_t BigCoreBase::getImageWidth()
-{
-	return this->imageWidth;
-}
-
-uint64_t BigCoreBase::getNumberOfPlanes()
-{
-	return this->numberOfPlanes;
-}
-
-const std::vector<uint64_t>& BigCoreBase::getDataOrder()
-{
-    return dataOrder;
-}
-
-const std::vector<uint8_t>& BigCoreBase::getDataType()
-{
-    return dataType;
-}
-
-bool BigCoreBase::isEmpty()
-{
-	return this->dataLength == 0 ? true : false;
+    delete[] _data;
 }
 
 void BigCoreBase::clear()
 {
-	if (this->data) delete[] this->data;
+    numberOfImages = 0;
+    imageHeight = 0;
+    imageWidth = 0;
+    numberOfPlanes = 1;
+    dataOrder = { DataOrderIds::NUMBER_OF_IMAGES, DataOrderIds::IMAGE_HEIGHT, DataOrderIds::IMAGE_WIDTH, DataOrderIds::NUMBER_OF_PLANES };
+    dataType = { DataTypes::FLOAT };
+    delete[] _data;
+    _data = nullptr;
+    dataSize = 0;
+    memorySize = 0;
 }
 
-bool BigCoreBase::isInMemory()
+void BigCoreBase::setSupportingStructures()
 {
-	// TODO: implement
-	;
+    setDimensions();
+    setEntityTypeSizes();
+    setSubSizes();
+    setDataSize();
+    setOffsets();
+    setOrderMap();
 }
 
-void BigCoreBase::setMemorySize(uint64_t bytes)
+void BigCoreBase::setDimensions()
 {
-	this->memorySize = bytes;
+    dimensions.clear();
+    for (auto it = dataOrder.cbegin(); it != dataOrder.cend(); ++it) {
+        switch (*it) {
+        case DataOrderIds::NUMBER_OF_IMAGES:
+            dimensions.push_back(numberOfImages);
+            break;
+        case DataOrderIds::IMAGE_HEIGHT:
+            dimensions.push_back(imageHeight);
+            break;
+        case DataOrderIds::IMAGE_WIDTH:
+            dimensions.push_back(imageWidth);
+            break;
+        case DataOrderIds::NUMBER_OF_PLANES:
+            dimensions.push_back(numberOfPlanes);
+            break;
+        }
+    }
 }
 
-size_t BigCoreBase::size()
+void BigCoreBase::setEntityTypeSizes()
 {
-	return this->dataLength;
+    entityTypeSizes.clear();
+    if (dataType.size() == 1) {
+        entityTypeSizes.resize(dimensions[0], typeSizes[static_cast<uint64_t>(dataType[0])]);
+    }
+    else {
+        for (uint64_t i = 1; i != dataType.size(); ++i) {
+            entityTypeSizes.push_back(typeSizes[static_cast<uint64_t>(dataType[i])]);
+        }
+    }
 }
 
-size_t BigCoreBase::sizeInMemory()
+void BigCoreBase::setSubSizes()
 {
-	// TODO: implement
+    uint64_t n = dimensions.size();
+    subSizes.resize(n);
+    subSizes[n - 1] = 1;
+    for (uint64_t i = n - 1; i != 0; --i) {
+        subSizes[i - 1] = subSizes[i] * dimensions[i];
+    }
 }
 
-size_t BigCoreBase::getImageType(const uint64_t dataType)
+void BigCoreBase::setDataSize()
 {
-	DataTypes dType = static_cast<DataTypes>(dataType);
-
-	if (dType == DataTypes::CHAR || dType == DataTypes::UNSIGNED_CHAR || dType == DataTypes::BOOL)
-		return 1;
-
-	if (dType == DataTypes::SHORT || dType == DataTypes::UNSIGNED_SHORT || dType == DataTypes::HALF)
-		return 2;
-
-	if (dType == DataTypes::FLOAT || dType == DataTypes::INT || dType == DataTypes::UNSIGNED_INT)
-		return 4;
-
-	if (dType == DataTypes::DOUBLE || dType == DataTypes::LONG_LONG || dType == DataTypes::UNSIGNED_LONG_LONG)
-		return 8;
-
-	return 0;
+    dataSize = 0;
+    for (auto it = entityTypeSizes.cbegin(); it != entityTypeSizes.cend(); ++it) {
+        dataSize += subSizes[0] * *it;
+    }
 }
 
-size_t BigCoreBase::imageSizeRaw()
+void BigCoreBase::setOffsets()
 {
-	return this->imageWidth * this->imageHeight * this->numberOfPlanes * this->numberOfTiles;
+    uint64_t offset = 0;
+    for (uint64_t i = 0; i != dimensions[0]; ++i) {
+        offsets.push_back(offset);
+        offset += subSizes[0] * entityTypeSizes[i];
+    }
 }
 
-size_t BigCoreBase::imageSize(const uint64_t dataType)
+void BigCoreBase::setOrderMap()
 {
-	return this->getImageType(dataType) * this->imageSizeRaw();	
+    orderMap.clear();
+    for (uint64_t i = 0; i != dataOrder.size(); ++i) {
+        orderMap[dataOrder[i]] = i;
+    }
 }
-
-bool BigCoreBase::isUniformDataType()
-{
-	return this->dataType.size() == 1 ? true : false;
-}
-
