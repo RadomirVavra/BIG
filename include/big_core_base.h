@@ -3,7 +3,7 @@
 #define _BIG_CORE_BASE_H_
 
 #include <cstdint>
-#include <array>
+#include <string>
 #include <map>
 #include <vector>
 
@@ -11,7 +11,7 @@
 const uint64_t CHUNK_LENGTH = 8;
 
 // big magic number
-const std::array<char, CHUNK_LENGTH> MAGIC = { 0x42, 0x49, 0x47, 0x00, 0x00, 0x00, 0x00, 0x00 };
+const std::string MAGIC = { 0x42, 0x49, 0x47, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 // default size of usable memory
 const uint64_t DEFAULT_MEMORY_SIZE = 1024ull * 1024ull * 1024ull;
@@ -28,6 +28,9 @@ enum class CoreChunkIds : uint64_t
     DATA = 7,
 };
 
+// core chunk ids in array
+const CoreChunkIds CoreChunkIdsArray[] = { CoreChunkIds::NUMBER_OF_IMAGES, CoreChunkIds::IMAGE_HEIGHT, CoreChunkIds::IMAGE_WIDTH, CoreChunkIds::NUMBER_OF_PLANES, CoreChunkIds::DATA_ORDER, CoreChunkIds::DATA_TYPE, CoreChunkIds::DATA };
+
 // data order ids
 enum class DataOrderIds : uint64_t
 {
@@ -36,6 +39,9 @@ enum class DataOrderIds : uint64_t
     IMAGE_WIDTH = 3,
     NUMBER_OF_PLANES = 4,
 };
+
+// default order of data
+const std::vector<DataOrderIds> defaultDataOrder = { DataOrderIds::NUMBER_OF_IMAGES, DataOrderIds::IMAGE_HEIGHT, DataOrderIds::IMAGE_WIDTH, DataOrderIds::NUMBER_OF_PLANES };
 
 // data type ids
 enum class DataTypes : uint64_t
@@ -54,7 +60,10 @@ enum class DataTypes : uint64_t
     BOOL = 12,
 };
 
-// size of data types
+// default type of data
+const std::vector<DataTypes> defaultDataType = { DataTypes::FLOAT };
+
+// sizes of data types
 const std::vector<uint64_t> typeSizes = { 0, 2, 4, 8, 1, 1, 2, 2, 4, 4, 8, 8, 1 };
 
 class BigCoreBase
@@ -90,7 +99,7 @@ public:
     // Returns order in which the data are serialized into memory
     const std::vector<DataOrderIds>& getDataOrder() { return dataOrder; }
 
-    // Returns type(s) of data
+    // Returns type(s) of data.
     const std::vector<DataTypes>& getDataType() { return dataType; }
 
     // Checks whether the container is empty. Returns true until memory is allocated.
@@ -140,13 +149,14 @@ protected:
     uint64_t imageHeight = 0;
     uint64_t imageWidth = 0;
     uint64_t numberOfPlanes = 1;
-    std::vector<DataOrderIds> dataOrder = { DataOrderIds::NUMBER_OF_IMAGES, DataOrderIds::IMAGE_HEIGHT, DataOrderIds::IMAGE_WIDTH, DataOrderIds::NUMBER_OF_PLANES };
-    std::vector<DataTypes> dataType = { DataTypes::FLOAT };
+    std::vector<DataOrderIds> dataOrder = defaultDataOrder;
+    std::vector<DataTypes> dataType = defaultDataType;
     char *_data = nullptr;
 
     uint64_t dataSize = 0;                              // size of the data according to given dimensions and data types
     uint64_t memorySize = 0;                            // size of the used memory
     uint64_t maxMemorySize = DEFAULT_MEMORY_SIZE;       // the maximal size of usable memory
+    uint64_t dataPosition = 0;                    // position of the data array in a file
 
     std::vector<uint64_t> offsets;                      // offsets of the outermost entities
     std::vector<uint64_t> entityTypeSizes;              // sizes of data types of the outermost entities

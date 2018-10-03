@@ -17,6 +17,7 @@ void BigCoreBase::clear()
     _data = nullptr;
     dataSize = 0;
     memorySize = 0;
+    dataPosition = 0;
 }
 
 void BigCoreBase::setSupportingStructures()
@@ -32,8 +33,8 @@ void BigCoreBase::setSupportingStructures()
 void BigCoreBase::setDimensions()
 {
     dimensions.clear();
-    for (auto it = dataOrder.cbegin(); it != dataOrder.cend(); ++it) {
-        switch (*it) {
+    for (const auto id : dataOrder) {
+        switch (id) {
         case DataOrderIds::NUMBER_OF_IMAGES:
             dimensions.push_back(numberOfImages);
             break;
@@ -76,8 +77,8 @@ void BigCoreBase::setSubSizes()
 void BigCoreBase::setDataSize()
 {
     dataSize = 0;
-    for (auto it = entityTypeSizes.cbegin(); it != entityTypeSizes.cend(); ++it) {
-        dataSize += subSizes[0] * *it;
+    for (const auto ts : entityTypeSizes) {
+        dataSize += subSizes[0] * ts;
     }
 }
 

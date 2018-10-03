@@ -1,13 +1,8 @@
-#include <algorithm>
-#include <fstream>
-#include <cstring>
-
-#include "../include/big_core_base.h"
 #include "../include/big_core_input.h"
 
-BigCoreInput::BigCoreInput(const std::string& filename)
+BigCoreInput::BigCoreInput(const std::string& fileName)
 {
-    openFile(filename);
+    openFile(fileName);
 }
 
 BigCoreInput::~BigCoreInput()
@@ -15,10 +10,10 @@ BigCoreInput::~BigCoreInput()
     if (file.is_open()) file.close();
 }
 
-void BigCoreInput::openFile(const std::string& filename)
+void BigCoreInput::openFile(const std::string& fileName)
 {
     // open file
-    file.open(filename, std::ios_base::binary);
+    file.open(fileName, std::ios_base::binary);
     if (!file) throw "Unable to open file for reading!";
 
     // check header
@@ -30,13 +25,12 @@ void BigCoreInput::openFile(const std::string& filename)
 
     // clear current content
     clear();
-    dataPosition = 0;
 
-    // load meta-data
+    // load meta-data and remember position of the data
     while (file) {
         CoreChunkIds id;
         uint64_t length;
-        if (!readChunk(file, id, length) || !readData(file, id, length)) {
+        if (!readChunk(id, length) || !readData(id, length)) {
             throw "Error while reading file!";
         }
     }
@@ -51,16 +45,16 @@ void BigCoreInput::openFile(const std::string& filename)
     setSupportingStructures();
 }
 
-void BigCoreInput::readFile(const std::string& filename)
+void BigCoreInput::readFile(const std::string& fileName)
 {
-    openFile(filename);
+    openFile(fileName);
     loadToMemory();
 }
 
-void BigCoreInput::readFile(const std::string& filename, uint64_t bytes)
+void BigCoreInput::readFile(const std::string& fileName, uint64_t bytes)
 {
     setMaxMemorySize(bytes);
-    readFile(filename);
+    readFile(fileName);
 }
 
 void BigCoreInput::loadToMemory()
@@ -75,100 +69,14 @@ void BigCoreInput::loadToMemory()
     }
 }
 
-template<typename T>
-const T& BigCoreInput::operator()(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane) const
-{
-    std::array<uint64_t, 4> indices;
-    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
-    indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
-    indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
-    indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
-
-    uint64_t index = offsets[indices[0]] + (indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3]) * entityTypeSizes[indices[0]];
-    return static_cast<const T&>(_data[index]);
-}
-
-template<typename T>
-const T* BigCoreInput::operator[](uint64_t index) const
-{
-    return static_cast<const T*>(_data + offsets[index]);
-}
-
-template<typename T>
-const T& BigCoreInput::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane) const
-{
-    if (imageNum >= numberOfImages)
-        throw "Image number out of bounds!";
-
-    if (row >= imageHeight)
-        throw "Row out of bounds!";
-
-    if (col >= imageWidth)
-        throw "Column out of bounds!";
-
-    if (plane >= numberOfPlanes)
-        throw "Plane number out of bounds!";
-
-    if (isInMemory()) return operator()(imageNum, row, col, plane)
-
-        // todo: load data from file and return them
-        throw "Data not in memory!";
-}
-
-template<typename T>
-const T* BigCoreInput::at(uint64_t index) const
-{
-    if (index >= dimensions[0])
-        throw "Index out of bounds!";
-
-    if (isInMemory()) return operator[](index);
-
-    // todo: load data from file and return them
-    throw "Data not in memory!";
-}
-
-template<typename T>
-void BigCoreInput::getImage(T* data, uint64_t imageNum)
-{
-    if (imageNum >= numberOfImages)
-        throw "Image number out of bound!";
-
-    uint64_t index = 0;
-    for (uint64_t row = 0; row != imageHeight; ++row) {
-        for (uint64_t col = 0; col != imageWidth; ++col) {
-            for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                data[index++] = operator()(imageNum, row, col, plane);
-            }
-        }
-    }
-}
-
-template<typename T>
-void BigCoreInput::getImage(std::vector<T>& data, uint64_t imageNum)
-{
-    if (imageNum >= numberOfImages)
-        throw "Image number out of bound!";
-
-    data.resize(imageHeight * imageWidth * numberOfPlanes);
-
-    uint64_t index = 0;
-    for (uint64_t row = 0; row != imageHeight; ++row) {
-        for (uint64_t col = 0; col != imageWidth; ++col) {
-            for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                data[index++] = operator()(imageNum, row, col, plane);
-            }
-        }
-    }
-}
-
-std::ifstream& BigCoreInput::readChunk(std::ifstream& file, CoreChunkIds& id, uint64_t& length)
+bool BigCoreInput::readChunk(CoreChunkIds& id, uint64_t& length)
 {
     file.read(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
     file.read(reinterpret_cast<char*>(&length), CHUNK_LENGTH);
-    return file;
+    return !file.fail();
 }
 
-std::ifstream& BigCoreInput::readData(std::ifstream &file, CoreChunkIds id, uint64_t length)
+bool BigCoreInput::readData(CoreChunkIds id, uint64_t length)
 {
     switch (id) {
     case CoreChunkIds::NUMBER_OF_IMAGES:
@@ -217,5 +125,5 @@ std::ifstream& BigCoreInput::readData(std::ifstream &file, CoreChunkIds id, uint
     default:
         file.seekg(length, std::ios_base::cur);
     }
-    return file;
+    return !file.fail();
 }
