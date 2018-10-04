@@ -19,11 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\big_cache.h" />
     <ClInclude Include="..\..\include\big_core_base.h" />
     <ClInclude Include="..\..\include\big_core_input.h" />
     <ClInclude Include="..\..\include\big_core_output.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\big_cache.cpp" />
     <ClCompile Include="..\..\src\big_core_base.cpp" />
     <ClCompile Include="..\..\src\big_core_input.cpp" />
     <ClCompile Include="..\..\src\big_core_output.cpp" />

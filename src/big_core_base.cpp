@@ -3,6 +3,22 @@
 BigCoreBase::~BigCoreBase()
 {
     delete[] _data;
+
+    // todo: release cache
+}
+
+uint64_t BigCoreBase::getEntitySize(uint64_t index)
+{
+    if (subSizes.size() == 0) setSupportingStructures();
+    if (index >= entityTypeSizes.size())
+        throw "Index out of bounds!";
+    return subSizes[0] * entityTypeSizes[index];
+}
+
+uint64_t BigCoreBase::getEntityBaseSize()
+{
+    if (subSizes.size() == 0) setSupportingStructures();
+    return subSizes[0];
 }
 
 void BigCoreBase::clear()
@@ -18,6 +34,8 @@ void BigCoreBase::clear()
     dataSize = 0;
     memorySize = 0;
     dataPosition = 0;
+
+    // todo: clear cache
 }
 
 void BigCoreBase::setSupportingStructures()
@@ -28,6 +46,9 @@ void BigCoreBase::setSupportingStructures()
     setDataSize();
     setOffsets();
     setOrderMap();
+    if (dataSize < maxMemorySize) mode = 1;
+    else if (maxMemorySize >= maxTypeSize * subSizes[0]) mode = 2;
+    else mode = 3;
 }
 
 void BigCoreBase::setDimensions()

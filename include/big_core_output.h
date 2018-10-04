@@ -19,8 +19,14 @@ public:
     // Calls reserve() method.
     BigCoreOutput(uint64_t numberOfImages, uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes = 1, const std::vector<DataOrderIds>& dataOrder = defaultDataOrder, const std::vector<DataTypes>& dataType = defaultDataType, const std::string& fileName = "");
 
+    // Copy constructor forbidden.
+    BigCoreOutput(const BigCoreOutput &) = delete;
+
     // Destructor. 
     ~BigCoreOutput();
+
+    // Assignment operator forbidden.
+    BigCoreOutput &operator=(const BigCoreOutput &) = delete;
 
     // Opens a file and writes meta-data, but does not write the data itself yet.
     void openFile(const std::string& fileName);
@@ -91,6 +97,48 @@ public:
     // Data must be of size height x width x #planes x sizeof(T).
     template<typename T>
     void addImage(const std::vector<T>& data, uint64_t imageNum);
+
+    // Adds an outermost entity of the container specified by its number.
+    // Data must be of size returned by getEntitySize(index) method.
+    template<typename T>
+    void addEntity(const T *data, uint64_t index);
+
+    // Returns an outermost entity of the container specified by its number.
+    // Data must be of size returned by getEntitySize(index) method.
+    template<typename T>
+    void addEntity(const std::vector<T>& data, uint64_t index);
+
+    // Adds new entity at the end.
+    // Data must be of size returned by getEntitySize(index) method.
+    template<typename T>
+    void push_back(const T *data);
+
+    // Adds new entity at the end.
+    // Data must be of size returned by getEntitySize(index) method.
+    template<typename T>
+    void push_back(const std::vector<T>& data);
+
+    // Removes the last entity.
+    void pop_back();
+
+    // Adds new entity before current entity specified by its index.
+    // If index is greater than or equal to number of entities, adds entity at the end.
+    // Data must be of size returned by getEntitySize(index) method.
+    template<typename T>
+    void insert(const T *data, uint64_t index);
+
+    // Adds new entity before current entity specified by its index.
+    // If index is greater than or equal to number of entities, adds entity at the end.
+    // Data must be of size returned by getEntitySize(index) method.
+    template<typename T>
+    void insert(const std::vector<T>& data, uint64_t index);
+
+    // Removes entity specified by its index.
+    void erase(uint64_t index);
+
+    // Swap entities
+    void swap(uint64_t index1, uint64_t index2);
+
 
 protected:
 

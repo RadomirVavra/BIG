@@ -43,6 +43,7 @@ void BigCoreInput::openFile(const std::string& fileName)
 
     // prepare supporting structures
     setSupportingStructures();
+    cache.initialize(maxMemorySize, dataPosition, subSizes[0], offsets, entityTypeSizes);
 }
 
 void BigCoreInput::readFile(const std::string& fileName)

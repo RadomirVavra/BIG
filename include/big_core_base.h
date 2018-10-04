@@ -2,6 +2,8 @@
 #ifndef _BIG_CORE_BASE_H_
 #define _BIG_CORE_BASE_H_
 
+#include "big_cache.h"
+
 #include <cstdint>
 #include <string>
 #include <map>
@@ -65,6 +67,7 @@ const std::vector<DataTypes> defaultDataType = { DataTypes::FLOAT };
 
 // sizes of data types
 const std::vector<uint64_t> typeSizes = { 0, 2, 4, 8, 1, 1, 2, 2, 4, 4, 8, 8, 1 };
+const uint64_t maxTypeSize = 8;
 
 class BigCoreBase
 {
@@ -84,23 +87,41 @@ public:
     // Destructor.
     ~BigCoreBase();
 
-    // Returns number of contained images
+    // Returns number of contained images.
     uint64_t getNumberOfImages() { return numberOfImages; }
-
-    // Returns height of images
+    
+    // Returns height of images.
     uint64_t getImageHeight() { return imageHeight; }
 
-    // Returns width of images
+    // Returns width of images.
     uint64_t getImageWidth() { return imageWidth; }
 
-    // Returns number of (color) planes
+    // Returns number of (color) planes.
     uint64_t getNumberOfPlanes() { return numberOfPlanes; }
 
-    // Returns order in which the data are serialized into memory
+    // Returns order in which the data are serialized into memory.
     const std::vector<DataOrderIds>& getDataOrder() { return dataOrder; }
 
     // Returns type(s) of data.
     const std::vector<DataTypes>& getDataType() { return dataType; }
+
+    // Returns size of the outermost entity specified by its number.
+    uint64_t getEntitySize(uint64_t index);
+
+    // Returns number of elements of an outermost entity.
+    uint64_t getEntityBaseSize();
+
+    // Returns data type of the outermost entity specified by its number.
+    DataTypes getEntityDataType(uint64_t index);
+
+    // Returns size of data type of the outermost entity specified by its number.
+    uint64_t getEntityTypeSize(uint64_t index);
+
+    // Returns size of the given data type.
+    static uint64_t getDataTypeSize(DataTypes dataType);
+
+    // Returns number of outermost entities.
+    uint64_t getNumberOfEntities();
 
     // Checks whether the container is empty. Returns true until memory is allocated.
     bool isEmpty() { return dataSize == 0; }
@@ -151,18 +172,22 @@ protected:
     uint64_t numberOfPlanes = 1;
     std::vector<DataOrderIds> dataOrder = defaultDataOrder;
     std::vector<DataTypes> dataType = defaultDataType;
+    
     char *_data = nullptr;
+    BigCache cache;
+    int mode = 0;                                       // data access mode, 1 = all in memory, 2 = use cache, 3 = all in file
 
     uint64_t dataSize = 0;                              // size of the data according to given dimensions and data types
     uint64_t memorySize = 0;                            // size of the used memory
     uint64_t maxMemorySize = DEFAULT_MEMORY_SIZE;       // the maximal size of usable memory
-    uint64_t dataPosition = 0;                    // position of the data array in a file
+    uint64_t dataPosition = 0;                          // position of the data array in a file
 
     std::vector<uint64_t> offsets;                      // offsets of the outermost entities
     std::vector<uint64_t> entityTypeSizes;              // sizes of data types of the outermost entities
     std::vector<uint64_t> dimensions;                   // dimensions of the data according to dataOrder
     std::map<DataOrderIds, uint64_t> orderMap;          // mapping of data order to the current indices
     std::vector<uint64_t> subSizes;                     // sizes of sub-blocks of data according to dataOrder
+
 };
 
 #endif // _BIG_CORE_BASE_H_
