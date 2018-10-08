@@ -27,6 +27,9 @@
     <ClInclude Include="..\..\include\big_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\big_core_consts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\big_core_input.cpp">

@@ -2,6 +2,7 @@
 #ifndef _BIG_CORE_BASE_H_
 #define _BIG_CORE_BASE_H_
 
+#include "big_core_consts.h"
 #include "big_cache.h"
 
 #include <cstdint>
@@ -9,83 +10,29 @@
 #include <map>
 #include <vector>
 
-// length of chunk
-const uint64_t CHUNK_LENGTH = 8;
-
-// big magic number
-const std::string MAGIC = { 0x42, 0x49, 0x47, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-// default size of usable memory
-const uint64_t DEFAULT_MEMORY_SIZE = 1024ull * 1024ull * 1024ull;
-
-// core chunk ids
-enum class CoreChunkIds : uint64_t
-{
-    NUMBER_OF_IMAGES = 1,
-    IMAGE_HEIGHT = 2,
-    IMAGE_WIDTH = 3,
-    NUMBER_OF_PLANES = 4,
-    DATA_ORDER = 5,
-    DATA_TYPE = 6,
-    DATA = 7,
-};
-
-// core chunk ids in array
-const CoreChunkIds CoreChunkIdsArray[] = { CoreChunkIds::NUMBER_OF_IMAGES, CoreChunkIds::IMAGE_HEIGHT, CoreChunkIds::IMAGE_WIDTH, CoreChunkIds::NUMBER_OF_PLANES, CoreChunkIds::DATA_ORDER, CoreChunkIds::DATA_TYPE, CoreChunkIds::DATA };
-
-// data order ids
-enum class DataOrderIds : uint64_t
-{
-    NUMBER_OF_IMAGES = 1,
-    IMAGE_HEIGHT = 2,
-    IMAGE_WIDTH = 3,
-    NUMBER_OF_PLANES = 4,
-};
-
-// default order of data
-const std::vector<DataOrderIds> defaultDataOrder = { DataOrderIds::NUMBER_OF_IMAGES, DataOrderIds::IMAGE_HEIGHT, DataOrderIds::IMAGE_WIDTH, DataOrderIds::NUMBER_OF_PLANES };
-
-// data type ids
-enum class DataTypes : uint64_t
-{
-    HALF = 1,
-    FLOAT = 2,
-    DOUBLE = 3,
-    CHAR = 4,
-    UNSIGNED_CHAR = 5,
-    SHORT = 6,
-    UNSIGNED_SHORT = 7,
-    INT = 8,
-    UNSIGNED_INT = 9,
-    LONG_LONG = 10,
-    UNSIGNED_LONG_LONG = 11,
-    BOOL = 12,
-};
-
-// default type of data
-const std::vector<DataTypes> defaultDataType = { DataTypes::FLOAT };
-
-// sizes of data types
-const std::vector<uint64_t> typeSizes = { 0, 2, 4, 8, 1, 1, 2, 2, 4, 4, 8, 8, 1 };
-const uint64_t maxTypeSize = 8;
-
 class BigCoreBase
 {
 protected:
 
     // Default constructor.
-    BigCoreBase() {}
+    BigCoreBase();
 
     // Copy constructor forbidden.
     BigCoreBase(const BigCoreBase &) = delete;
 
-    // Assignment operator forbidden.
+    // Move constructor.
+    BigCoreBase(BigCoreBase &&other) = default;
+
+    // Copy-assignment operator forbidden.
     BigCoreBase &operator=(const BigCoreBase &) = delete;
 
-public:
+    // Move-assignment operator.
+    BigCoreBase &operator=(BigCoreBase &&rhs) = default;
 
     // Destructor.
-    ~BigCoreBase();
+    ~BigCoreBase() = default;
+
+public:
 
     // Returns number of contained images.
     uint64_t getNumberOfImages() { return numberOfImages; }
@@ -104,6 +51,9 @@ public:
 
     // Returns type(s) of data.
     const std::vector<DataTypes>& getDataType() { return dataType; }
+
+    // Returns i_th dimension of the container.
+    uint64_t getDimension(uint64_t i);
 
     // Returns size of the outermost entity specified by its number.
     uint64_t getEntitySize(uint64_t index);
@@ -129,17 +79,17 @@ public:
     // Frees memory. In case of output class, enables to change dimensions, data order or data types once again.
     void clear();
 
-    // Returns true if all data are in memory.
-    bool isInMemory() { return _data != nullptr && memorySize == dataSize; }
-
-    // Sets maximum possible size of memory that can be used. Does not free memory if already allocated.
-    void setMaxMemorySize(uint64_t bytes = DEFAULT_MEMORY_SIZE) { maxMemorySize = bytes; }
-
     // Returns total size of the data.
     uint64_t size() { return dataSize; }
 
+    // Sets maximum possible size of memory that can be used. Does not free memory if already allocated.
+    void setCacheSize(uint64_t bytes) { cache.setSize(bytes); }
+
     // Returns size of the used memory.
-    uint64_t sizeInMemory() { return memorySize; }
+    uint64_t getCacheSize() { return cache.getSize(); }
+
+    // Returns true if all data are in memory.
+    //bool isInMemory() { return _data != nullptr && memorySize == dataSize; }
 
 protected:
 
@@ -154,6 +104,9 @@ protected:
 
     // Do not call directly, use setSupportingStructures() method.
     void setSubSizes();
+
+    // Do not call directly, use setSupportingStructures() method.
+    void setEntitySizes();
 
     // Do not call directly, use setSupportingStructures() method.
     void setDataSize();
@@ -173,21 +126,16 @@ protected:
     std::vector<DataOrderIds> dataOrder = defaultDataOrder;
     std::vector<DataTypes> dataType = defaultDataType;
     
-    char *_data = nullptr;
-    BigCache cache;
-    int mode = 0;                                       // data access mode, 1 = all in memory, 2 = use cache, 3 = all in file
-
-    uint64_t dataSize = 0;                              // size of the data according to given dimensions and data types
-    uint64_t memorySize = 0;                            // size of the used memory
-    uint64_t maxMemorySize = DEFAULT_MEMORY_SIZE;       // the maximal size of usable memory
-    uint64_t dataPosition = 0;                          // position of the data array in a file
-
     std::vector<uint64_t> offsets;                      // offsets of the outermost entities
     std::vector<uint64_t> entityTypeSizes;              // sizes of data types of the outermost entities
+    std::vector<uint64_t> entitySizes;                  // sizes of the outermost entities
     std::vector<uint64_t> dimensions;                   // dimensions of the data according to dataOrder
     std::map<DataOrderIds, uint64_t> orderMap;          // mapping of data order to the current indices
     std::vector<uint64_t> subSizes;                     // sizes of sub-blocks of data according to dataOrder
+    uint64_t dataSize = 0;                              // size of the data according to given dimensions and data types
+    std::vector<uint64_t> dataPositions;                // positions of the data entities in a file
 
+    BigCache cache;
 };
 
 #endif // _BIG_CORE_BASE_H_

@@ -16,27 +16,23 @@ public:
 
     // Reserve constructor. Constructs an empty container, sets dimensions of the container, data order and data type(s).
     // If fileName is not empty, opens a file and writes meta-data, but does not write the data itself yet.
-    // Calls reserve() method.
+    // If fileName is provided, dimensions of the container, data order or data type(s) cannot be changed any more, except whole entities can be inserted or removed.
     BigCoreOutput(uint64_t numberOfImages, uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes = 1, const std::vector<DataOrderIds>& dataOrder = defaultDataOrder, const std::vector<DataTypes>& dataType = defaultDataType, const std::string& fileName = "");
 
     // Copy constructor forbidden.
     BigCoreOutput(const BigCoreOutput &) = delete;
 
+    // Move constructor.
+    BigCoreOutput(BigCoreOutput &&other) = default;
+
     // Destructor. 
     ~BigCoreOutput();
 
-    // Assignment operator forbidden.
+    // Copy-assignment operator forbidden.
     BigCoreOutput &operator=(const BigCoreOutput &) = delete;
 
-    // Opens a file and writes meta-data, but does not write the data itself yet.
-    void openFile(const std::string& fileName);
-
-    // Writes meta-data and the data itself to a file. If fileName is empty, uses file specified earlier through constructor or openFile method.
-    // Keeps file open for additional writes when new data are provided.
-    void writeFile(const std::string& fileName = "");
-
-    // Writes unsaved data and closes attached file.
-    void closeFile();
+    // Move-assignment operator.
+    BigCoreOutput &operator=(BigCoreOutput &&rhs) = default;
 
     // Sets dimensions of the container, data order and data type(s).
     void setParameters(uint64_t numberOfImages, uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes = 1, const std::vector<DataOrderIds>& dataOrder = defaultDataOrder, const std::vector<DataTypes>& dataType = defaultDataType);
@@ -59,85 +55,68 @@ public:
     // Sets type(s) of data.
     void setDataType(const std::vector<DataTypes>& dataType = defaultDataType) { if (!locked) this->dataType = dataType; }
 
-    // If possible, reserves required space in a memory to store provided data.
-    // If it is not possible and if fileName has been provided, reserves required space in a file.
-    // Dimensions of the container, data order or data type(s) cannot be changed any more.
-    void reserve();
+    // Opens a file, but does not write any data, except magic number.
+    // Dimensions of the container, data order or data type(s) cannot be changed any more, except whole entities can be inserted or removed.
+    void openFile(const std::string& fileName);
 
-    // Sets maximal possible size of memory that can be used and if possible, reserves required space in the memory to store provided data.
-    // If it is not possible and if fileName has been provided, reserves required space in a file.
-    // Dimensions of the container, data order or data type(s) cannot be changed any more.
-    void reserve(uint64_t bytes);
+    // Writes all meta-data and un-saved data from cache and closes attached file.
+    void closeFile();
 
-    // Returns a direct pointer to the memory array used internally by the container to store its owned elements.
-    char* data() { return _data; }
+    // Writes all data into the attached file. Size of the array must be at least size().
+    // Does not add data to cache.
+    void addData(std::shared_ptr<const char> data);
 
-    // Access element in a given image at given row, column and (color) plane. Does not check bounds.
+    // Writes all un-saved data from cache into the attached file.
+    void flushCache();
+
+    // Adds element in the given image at given row, column and (color) plane. Checks bounds.
     template<typename T>
-    T & operator() (uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
+    void addElement(const T& value, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
 
-    // Access the outermost entity of the container. Does not check bounds.
+    // Adds element in the given image at given row, column and (color) plane. Does not check bounds.
     template<typename T>
-    T * operator[] (uint64_t index);
+    void addElementFast(const T& value, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
 
-    // Access element in a given image at given row, column and (color) plane. Checks bounds.
+    // Adds the entity to the container. Checks bounds.
     template<typename T>
-    T & at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
+    void addEntity(std::shared_ptr<const T> data, uint64_t index);
 
-    // Access the outermost entity of the container. Checks bounds.
+    // Adds the entity to the container. Does not check bounds.
     template<typename T>
-    T * at(uint64_t index);
+    void addEntityFast(std::shared_ptr<const T> data, uint64_t index);
 
-    // Adds an image specified by its number.
+    // Adds the image specified by its number.
     // Data must be of size height x width x #planes x sizeof(T).
     template<typename T>
-    void addImage(const T *data, uint64_t imageNum);
+    void addImage(std::shared_ptr<const T> data, uint64_t imageNum);
 
-    // Adds an image specified by its number.
+    // Adds the image specified by its number.
     // Data must be of size height x width x #planes x sizeof(T).
     template<typename T>
     void addImage(const std::vector<T>& data, uint64_t imageNum);
 
-    // Adds an outermost entity of the container specified by its number.
-    // Data must be of size returned by getEntitySize(index) method.
-    template<typename T>
-    void addEntity(const T *data, uint64_t index);
+    // TODO
+    // ------------------------------------------------------------------
+    //// Adds new entity at the end.
+    //// Data must be of size returned by getEntitySize(index) method.
+    //template<typename T>
+    //void push_back(std::shared_ptr<T> data);
 
-    // Returns an outermost entity of the container specified by its number.
-    // Data must be of size returned by getEntitySize(index) method.
-    template<typename T>
-    void addEntity(const std::vector<T>& data, uint64_t index);
+    //// Removes the last entity.
+    //void pop_back();
 
-    // Adds new entity at the end.
-    // Data must be of size returned by getEntitySize(index) method.
-    template<typename T>
-    void push_back(const T *data);
+    //// Adds new entity before current entity specified by its index.
+    //// If index is greater than or equal to number of entities, adds entity at the end.
+    //// Data must be of size returned by getEntitySize(index) method.
+    //template<typename T>
+    //void insert(std::shared_ptr<T> data, uint64_t index);
 
-    // Adds new entity at the end.
-    // Data must be of size returned by getEntitySize(index) method.
-    template<typename T>
-    void push_back(const std::vector<T>& data);
+    //// Removes entity specified by its index.
+    //void erase(uint64_t index);
 
-    // Removes the last entity.
-    void pop_back();
-
-    // Adds new entity before current entity specified by its index.
-    // If index is greater than or equal to number of entities, adds entity at the end.
-    // Data must be of size returned by getEntitySize(index) method.
-    template<typename T>
-    void insert(const T *data, uint64_t index);
-
-    // Adds new entity before current entity specified by its index.
-    // If index is greater than or equal to number of entities, adds entity at the end.
-    // Data must be of size returned by getEntitySize(index) method.
-    template<typename T>
-    void insert(const std::vector<T>& data, uint64_t index);
-
-    // Removes entity specified by its index.
-    void erase(uint64_t index);
-
-    // Swap entities
-    void swap(uint64_t index1, uint64_t index2);
+    //// Swaps entities specified by their numbers.
+    //void swap(uint64_t index1, uint64_t index2);
+    // ------------------------------------------------------------------
 
 
 protected:
@@ -145,40 +124,19 @@ protected:
     // Write chunk's id, length and data.
     bool writeChunk(CoreChunkIds id);
 
-    // Write the data itself.
-    bool writeData();
+    //// Write the data itself.
+    //bool writeData();
 
 protected:
 
     std::ofstream file;             // attached file
     bool locked = false;            // Indicates whether data array is locked. Once locked, dimensions, data order or data types cannot be modified.
-    bool changed = false;           // Indicates whether data has been changed after last write to file.
 };
 
 
-template<typename T>
-T& BigCoreOutput::operator()(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane)
-{
-    changed = true;
-    std::array<uint64_t, 4> indices;
-    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
-    indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
-    indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
-    indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
-
-    uint64_t index = offsets[indices[0]] + (indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3]) * entityTypeSizes[indices[0]];
-    return static_cast<T&>(_data[index]);
-}
 
 template<typename T>
-T* BigCoreOutput::operator[](uint64_t index)
-{
-    changed = true;
-    return static_cast<T*>(_data + offsets[index]);
-}
-
-template<typename T>
-T& BigCoreOutput::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane)
+void BigCoreOutput::addElement(const T& value, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane)
 {
     if (imageNum >= numberOfImages)
         throw "Image number out of bounds!";
@@ -192,41 +150,63 @@ T& BigCoreOutput::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t pla
     if (plane >= numberOfPlanes)
         throw "Plane number out of bounds!";
 
-    if (isInMemory()) {
-        changed = true;
-        return operator()(imageNum, row, col, plane);
-    }
+    std::array<uint64_t, 4> indices;
+    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
+    indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
+    indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
+    indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
 
-    // todo: load data from file and return them
-    throw "Data not in memory!";
+    uint64_t index = indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3];
+
+    cache.addElement(value, indices[0], index, file);
 }
 
 template<typename T>
-T* BigCoreOutput::at(uint64_t index)
+void BigCoreOutput::addElementFast(const T& value, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane)
+{
+    std::array<uint64_t, 4> indices;
+    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
+    indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
+    indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
+    indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
+
+    uint64_t index = indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3];
+
+    cache.addElement(value, indices[0], index, file);
+}
+
+template<typename T>
+void BigCoreOutput::addEntity(std::shared_ptr<const T> data, uint64_t index)
 {
     if (index >= dimensions[0])
         throw "Index out of bounds!";
 
-    if (isInMemory()) {
-        changed = true;
-        return operator[](index);
-    }
-
-    // todo: load data from file and return them
-    throw "Data not in memory!";
+    cache.addEntity(std::dynamic_pointer_cast<char>(data), index, file);
 }
 
 template<typename T>
-void BigCoreOutput::addImage(const T* data, uint64_t imageNum)
+void BigCoreOutput::addEntityFast(std::shared_ptr<const T> data, uint64_t index)
+{
+    cache.addEntity(std::dynamic_pointer_cast<char>(data), index, file);
+}
+
+template<typename T>
+void BigCoreOutput::addImage(std::shared_ptr<const T> data, uint64_t imageNum)
 {
     if (imageNum >= numberOfImages)
         throw "Image number out of bound!";
 
+    std::array<uint64_t, 4> indices;
+    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
     uint64_t index = 0;
     for (uint64_t row = 0; row != imageHeight; ++row) {
+        indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
         for (uint64_t col = 0; col != imageWidth; ++col) {
+            indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
             for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                operator()(imageNum, row, col, plane) = data[index++];
+                indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
+                uint64_t i = indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3];
+                cache.addElement<T>(data[index++], indices[0], i, file);
             }
         }
     }
@@ -235,20 +215,44 @@ void BigCoreOutput::addImage(const T* data, uint64_t imageNum)
 template<typename T>
 void BigCoreOutput::addImage(const std::vector<T>& data, uint64_t imageNum)
 {
-    if (imageNum >= numberOfImages)
-        throw "Image number out of bound!";
+    if (data.size() < subSizes[0])
+        thow "Not enough data provided!";
 
-    data.resize(imageHeight * imageWidth * numberOfPlanes);
-
+    std::array<uint64_t, 4> indices;
+    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
     uint64_t index = 0;
     for (uint64_t row = 0; row != imageHeight; ++row) {
+        indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
         for (uint64_t col = 0; col != imageWidth; ++col) {
+            indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
             for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                operator()(imageNum, row, col, plane) = data[index++];
+                indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
+                uint64_t i = indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3];
+                cache.addElement<T>(data[index++], indices[0], i, file);
             }
         }
     }
 }
+
+// TODO
+// ------------------------------------------------------------------
+//// Adds new entity at the end.
+//// Data must be of size returned by getEntitySize(index) method.
+//template<typename T>
+//void BigCoreOutput::push_back(std::shared_ptr<T> data)
+//{
+//    // todo
+//}
+//
+//// Adds new entity before current entity specified by its index.
+//// If index is greater than or equal to number of entities, adds entity at the end.
+//// Data must be of size returned by getEntitySize(index) method.
+//template<typename T>
+//void BigCoreOutput::insert(std::shared_ptr<T> data, uint64_t index)
+//{
+//    // todo
+//}
+// ---------------------------------------------------------------------
 
 
 #endif // _BIG_CORE_OUTPUT_H_ 

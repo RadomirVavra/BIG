@@ -7,11 +7,14 @@ BigCoreInput::BigCoreInput(const std::string& fileName)
 
 BigCoreInput::~BigCoreInput()
 {
-    if (file.is_open()) file.close();
+    closeFile();
 }
 
 void BigCoreInput::openFile(const std::string& fileName)
 {
+    // close current file
+    closeFile();
+
     // open file
     file.open(fileName, std::ios_base::binary);
     if (!file) throw "Unable to open file for reading!";
@@ -35,39 +38,32 @@ void BigCoreInput::openFile(const std::string& fileName)
         }
     }
 
-    // check loaded values
-    if (numberOfImages == 0) throw "Number of images in the file is zero!";
-    if (imageHeight == 0) throw "Height of images in the file is zero!";
-    if (imageWidth == 0) throw "Width of images in the file is zero!";
-    if (dataPosition == 0) throw "Data are missing in the file!";
-
     // prepare supporting structures
     setSupportingStructures();
-    cache.initialize(maxMemorySize, dataPosition, subSizes[0], offsets, entityTypeSizes);
 }
 
-void BigCoreInput::readFile(const std::string& fileName)
+void BigCoreInput::closeFile()
 {
-    openFile(fileName);
-    loadToMemory();
+    if (file.is_open()) file.close();
 }
 
-void BigCoreInput::readFile(const std::string& fileName, uint64_t bytes)
+void BigCoreInput::getData(std::shared_ptr<char> data)
 {
-    setMaxMemorySize(bytes);
-    readFile(fileName);
-}
-
-void BigCoreInput::loadToMemory()
-{
-    if (dataSize <= maxMemorySize)
-    {
-        // allocate new memory and load data to it
-        memorySize = dataSize;
-        _data = new char[memorySize];
-        file.seekg(dataPosition);
-        file.read(_data, dataSize);
+    for (uint64_t i = 0; i != dimensions[0]; ++i) {
+        file.seekg(dataPositions[i]);
+        file.read(data.get() + offsets[i], entitySizes[i]);
     }
+}
+
+void BigCoreInput::loadToCache()
+{
+    cache.load(file);
+}
+
+void BigCoreInput::loadToCache(uint64_t bytes)
+{
+    cache.setSize(bytes);
+    cache.load(file);
 }
 
 bool BigCoreInput::readChunk(CoreChunkIds& id, uint64_t& length)
@@ -121,7 +117,11 @@ bool BigCoreInput::readData(CoreChunkIds id, uint64_t length)
         break;
     }
     case CoreChunkIds::DATA:
-        dataPosition = file.tellg();
+        uint64_t index;
+        file.read(reinterpret_cast<char*>(&index), sizeof(index));
+        if (dataPositions.size() <= index) dataPositions.resize(index + 1, 0);
+        dataPositions[index] = file.tellg();
+        file.seekg(length, std::ios_base::cur);
         break;
     default:
         file.seekg(length, std::ios_base::cur);

@@ -1,18 +1,28 @@
 #include "../include/big_core_base.h"
 
-BigCoreBase::~BigCoreBase()
+BigCoreBase::BigCoreBase()
 {
-    delete[] _data;
+    cache.initialize(entitySizes, dataPositions);
+}
 
-    // todo: release cache
+uint64_t BigCoreBase::getDimension(uint64_t index)
+{
+    if (dimensions.size() == 0) setSupportingStructures();
+
+    if (index >= dimensions.size())
+        throw "Index out of bounds!";
+
+    return dimensions[index];
 }
 
 uint64_t BigCoreBase::getEntitySize(uint64_t index)
 {
-    if (subSizes.size() == 0) setSupportingStructures();
-    if (index >= entityTypeSizes.size())
+    if (entitySizes.size() == 0) setSupportingStructures();
+
+    if (index >= entitySizes.size())
         throw "Index out of bounds!";
-    return subSizes[0] * entityTypeSizes[index];
+
+    return entitySizes[index];
 }
 
 uint64_t BigCoreBase::getEntityBaseSize()
@@ -21,21 +31,62 @@ uint64_t BigCoreBase::getEntityBaseSize()
     return subSizes[0];
 }
 
+DataTypes BigCoreBase::getEntityDataType(uint64_t index)
+{
+    if (dataType.size() == 1) return dataType[0];
+
+    if (index + 1 >= dataType.size())
+        throw "Index out of bounds!";
+
+    return dataType[index + 1];
+}
+
+uint64_t BigCoreBase::getEntityTypeSize(uint64_t index)
+{
+    if (entityTypeSizes.size() == 0) setSupportingStructures();
+
+    if (index >= entityTypeSizes.size())
+        throw "Index out of bounds!";
+
+    return entityTypeSizes[index];
+
+}
+
+uint64_t BigCoreBase::getDataTypeSize(DataTypes dataType)
+{
+    uint64_t index = static_cast<uint64_t>(dataType);
+
+    if (index >= typeSizes.size())
+        throw "Unknown data type!";
+
+    return typeSizes[index];
+}
+
+uint64_t BigCoreBase::getNumberOfEntities()
+{
+    if (dimensions.size() == 0) return 0;
+    return dimensions[0];
+}
+
 void BigCoreBase::clear()
 {
     numberOfImages = 0;
     imageHeight = 0;
     imageWidth = 0;
     numberOfPlanes = 1;
-    dataOrder = { DataOrderIds::NUMBER_OF_IMAGES, DataOrderIds::IMAGE_HEIGHT, DataOrderIds::IMAGE_WIDTH, DataOrderIds::NUMBER_OF_PLANES };
-    dataType = { DataTypes::FLOAT };
-    delete[] _data;
-    _data = nullptr;
-    dataSize = 0;
-    memorySize = 0;
-    dataPosition = 0;
+    dataOrder = defaultDataOrder;
+    dataType = defaultDataType;
 
-    // todo: clear cache
+    cache.clear();
+
+    offsets.clear();
+    entityTypeSizes.clear();
+    entitySizes.clear();
+    dimensions.clear();
+    orderMap.clear();
+    subSizes.clear();
+    dataSize = 0;
+    dataPositions.clear();
 }
 
 void BigCoreBase::setSupportingStructures()
@@ -43,12 +94,11 @@ void BigCoreBase::setSupportingStructures()
     setDimensions();
     setEntityTypeSizes();
     setSubSizes();
+    setEntitySizes();
     setDataSize();
     setOffsets();
     setOrderMap();
-    if (dataSize < maxMemorySize) mode = 1;
-    else if (maxMemorySize >= maxTypeSize * subSizes[0]) mode = 2;
-    else mode = 3;
+    dataPositions.resize(dimensions[0], 0);
 }
 
 void BigCoreBase::setDimensions()
@@ -92,6 +142,14 @@ void BigCoreBase::setSubSizes()
     subSizes[n - 1] = 1;
     for (uint64_t i = n - 1; i != 0; --i) {
         subSizes[i - 1] = subSizes[i] * dimensions[i];
+    }
+}
+
+void BigCoreBase::setEntitySizes()
+{
+    entitySizes.clear();
+    for (const auto& ts : entityTypeSizes) {
+        entitySizes.push_back(ts * subSizes[0]);
     }
 }
 

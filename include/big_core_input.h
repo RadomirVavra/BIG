@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <array>
+#include <memory>
 
 class BigCoreInput : public BigCoreBase
 {
@@ -20,63 +21,59 @@ public:
     // Copy constructor forbidden.
     BigCoreInput(const BigCoreInput &) = delete;
 
+    // Move constructor.
+    BigCoreInput(BigCoreInput &&other) = default;
+
     // Destructor.
     ~BigCoreInput();
 
-    // Assignment operator forbidden.
+    // Copy-assignment operator forbidden.
     BigCoreInput &operator=(const BigCoreInput &) = delete;
+
+    // Move-assignment operator.
+    BigCoreInput &operator=(BigCoreInput &&rhs) = default;
 
     // Opens file, reads parameters of the container, but does not read data.
     void openFile(const std::string& fileName);
 
-    // Opens file, reads parameters and data to memory, if possible.
-    void readFile(const std::string& fileName);
+    // Closes file. Data in cache are still accessible until new file is opened.
+    void closeFile();
 
-    // Sets maximal possible size of memory that can be used and opens file, reads parameters and data to memory, if possible.
-    void readFile(const std::string& fileName, uint64_t bytes);
+    // Loads all data into the provided array. Size of the array must be at least size().
+    // Does not load data to cache.
+    void getData(std::shared_ptr<char> data);
 
-    // Loads all data to memory, if possible. Does nothing if data are bigger than memory size. 
-    void loadToMemory();
+    // Loads all data to cache, if possible. Does nothing if data are bigger than cache size. 
+    void loadToCache();
 
-    // Returns a direct pointer to the memory array used internally by the container to store its owned elements.
-    // Warning: all data must be in memory, use isInMemory() method to verify.
-    const char* data() const { return _data; }
+    // Sets maximal possible size of cache that can be used and loads all data to cache, if possible.
+    // Does nothing if data are bigger than cache size. 
+    void loadToCache(uint64_t bytes);
 
-    // Access element in a given image at given row, column and (color) plane. Does not check bounds.
-    // Warning: all data must be in memory, use isInMemory() method to verify.
+    // Returns element in the given image at given row, column and (color) plane. Does not check bounds.
     template<typename T>
-    const T & operator() (uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0) const;
+    T operator() (uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
 
-    // Access an outermost entity of the container specified by its number. Does not check bounds.
-    // Warning: all data must be in memory, use isInMemory() method to verify.
+    // Returns element in the given image at given row, column and (color) plane. Checks bounds.
     template<typename T>
-    const T * operator[] (uint64_t index) const;
+    T at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
 
-    // Access element in a given image at given row, column and (color) plane. Checks bounds.
+    // Returns pointer to the outermost entity of the container specified by its number. Does not check bounds.
     template<typename T>
-    const T & at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0) const;
+    std::shared_ptr<const T> operator[] (uint64_t index);
 
-    // Access an outermost entity of the container specified by its number. Checks bounds.
+    // Returns pointer to the outermost entity of the container specified by its number. Checks bounds.
     template<typename T>
-    const T * at(uint64_t index) const;
+    std::shared_ptr<const T> at(uint64_t index);
 
-    // Returns an image specified by its number.
+    // Returns the image specified by its number.
     // Data must be of size at least height x width x #planes x sizeof(T).
     template<typename T>
-    void getImage(T *data, uint64_t imageNum) const;
+    void getImage(std::shared_ptr<T> data, uint64_t imageNum);
 
-    // Returns an image specified by its number.
+    // Returns the image specified by its number.
     template<typename T>
-    void getImage(std::vector<T>& data, uint64_t imageNum) const;
-
-    // Returns an outermost entity of the container specified by its number.
-    // Data must be at least of size returned by getEntitySize(index) method.
-    template<typename T>
-    void getEntity(T *data, uint64_t index) const;
-
-    // Returns an outermost entity of the container specified by its number.
-    template<typename T>
-    void getEntity(std::vector<T>& data, uint64_t index) const;
+    void getImage(std::vector<T>& data, uint64_t imageNum);
 
 protected:
 
@@ -88,12 +85,12 @@ protected:
 
 protected:
 
-    std::ifstream file;                 // attached file
+    std::ifstream file;     // attached file
 };
 
 
 template<typename T>
-const T& BigCoreInput::operator()(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane) const
+T BigCoreInput::operator()(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane)
 {
     std::array<uint64_t, 4> indices;
     indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
@@ -101,18 +98,13 @@ const T& BigCoreInput::operator()(uint64_t imageNum, uint64_t row, uint64_t col,
     indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
     indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
 
-    uint64_t index = offsets[indices[0]] + (indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3]) * entityTypeSizes[indices[0]];
-    return static_cast<const T&>(_data[index]);
+    uint64_t index = indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3];
+
+    return cache.getElement<T>(indices[0], index, file);
 }
 
 template<typename T>
-const T* BigCoreInput::operator[](uint64_t index) const
-{
-    return static_cast<const T*>(_data + offsets[index]);
-}
-
-template<typename T>
-const T& BigCoreInput::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane) const
+T BigCoreInput::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane)
 {
     if (imageNum >= numberOfImages)
         throw "Image number out of bounds!";
@@ -126,145 +118,66 @@ const T& BigCoreInput::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_
     if (plane >= numberOfPlanes)
         throw "Plane number out of bounds!";
 
-    if (isInMemory()) return operator()(imageNum, row, col, plane);
-
-    std::array<uint64_t, 4> indices;
-    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
-    indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
-    indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
-    indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
-
-    uint64_t index = (indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3]) * entityTypeSizes[indices[0]];
-    char* d = cache.getEntity(indices[0], file);
-    return static_cast<const T&>(d[index]);
+    return operator()<T>(imageNum, row, col, plane);
 }
 
 template<typename T>
-const T* BigCoreInput::at(uint64_t index) const
+std::shared_ptr<const T> BigCoreInput::operator[](uint64_t index)
+{
+    return std::dynamic_pointer_cast<const T>(cache.getEntity(index, file));
+}
+
+template<typename T>
+std::shared_ptr<const T> BigCoreInput::at(uint64_t index)
 {
     if (index >= dimensions[0])
         throw "Index out of bounds!";
 
-    if (isInMemory()) return operator[](index);
-
-    return static_cast<const T*>(cache.getEntity(index, file));
+    return std::dynamic_pointer_cast<const T>(cache.getEntity(index, file));
 }
 
 template<typename T>
-void BigCoreInput::getImage(T* data, uint64_t imageNum) const
+void BigCoreInput::getImage(std::shared_ptr<T> data, uint64_t imageNum)
 {
     if (imageNum >= numberOfImages)
         throw "Image number out of bound!";
 
-    if (isInMemory()) {
-        uint64_t index = 0;
-        for (uint64_t row = 0; row != imageHeight; ++row) {
-            for (uint64_t col = 0; col != imageWidth; ++col) {
-                for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                    data[index++] = operator()(imageNum, row, col, plane);
-                }
-            }
-        }
-    }
-    else {
-        std::array<uint64_t, 4> indices;
-        indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
-        uint64_t index = 0;
-        for (uint64_t row = 0; row != imageHeight; ++row) {
-            indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
-            for (uint64_t col = 0; col != imageWidth; ++col) {
-                indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
-                for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                    indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
-                    char* d = cache.getEntity(indices[0], file);
-                    uint64_t i = (indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3]) * entityTypeSizes[indices[0]];
-                    data[index++] = static_cast<const T&>(d[i]);
-                }
+    std::array<uint64_t, 4> indices;
+    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
+    uint64_t index = 0;
+    for (uint64_t row = 0; row != imageHeight; ++row) {
+        indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
+        for (uint64_t col = 0; col != imageWidth; ++col) {
+            indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
+            for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
+                indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
+                uint64_t i = indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3];
+                data[index++] = cache.getElement<T>(indices[0], i, file);
             }
         }
     }
 }
 
 template<typename T>
-void BigCoreInput::getImage(std::vector<T>& data, uint64_t imageNum) const
+void BigCoreInput::getImage(std::vector<T>& data, uint64_t imageNum)
 {
     if (imageNum >= numberOfImages)
         throw "Image number out of bound!";
 
     data.resize(imageHeight * imageWidth * numberOfPlanes);
-
-    switch (mode) {
-    case 1:
-        uint64_t index = 0;
-        for (uint64_t row = 0; row != imageHeight; ++row) {
-            for (uint64_t col = 0; col != imageWidth; ++col) {
-                for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                    data[index++] = operator()(imageNum, row, col, plane);
-                }
+    std::array<uint64_t, 4> indices;
+    indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
+    uint64_t index = 0;
+    for (uint64_t row = 0; row != imageHeight; ++row) {
+        indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
+        for (uint64_t col = 0; col != imageWidth; ++col) {
+            indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
+            for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
+                indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
+                uint64_t i = indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3];
+                data[index++] = cache.getElement<T>(indices[0], i, file);
             }
         }
-        break;
-    case 2:
-        std::array<uint64_t, 4> indices;
-        indices[orderMap[DataOrderIds::NUMBER_OF_IMAGES]] = imageNum;
-        uint64_t index = 0;
-        for (uint64_t row = 0; row != imageHeight; ++row) {
-            indices[orderMap[DataOrderIds::IMAGE_HEIGHT]] = row;
-            for (uint64_t col = 0; col != imageWidth; ++col) {
-                indices[orderMap[DataOrderIds::IMAGE_WIDTH]] = col;
-                for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                    indices[orderMap[DataOrderIds::NUMBER_OF_PLANES]] = plane;
-                    char* d = cache.getEntity(indices[0], file);
-                    uint64_t i = (indices[1] * subSize[1] + indices[2] * subSize[2] + indices[3]) * entityTypeSizes[indices[0]];
-                    data[index++] = static_cast<const T&>(d[i]);
-                }
-            }
-        }
-        break;
-    case 3:
-        // todo
-    }
-}
-
-
-template<typename T>
-void BigCoreInput::getEntity(T *data, uint64_t index) const
-{
-    if (index >= dimensions[0])
-        throw "Index out of bounds!";
-
-    switch (mode) {
-    case 1:
-        std::copy(_data + offsets[index], _data + offsets[index] + subSizes[0] * entityTypeSizes[index], data);
-        break;
-    case 2:
-        char *d = cache.getEntity(index, file);
-        std::copy(d, d + subSizes[0] * entityTypeSizes[index], data);
-        break;
-    case 3:
-        // todo
-        break;
-    }
-}
-
-// Returns an outermost entity of the container specified by its number.
-template<typename T>
-void BigCoreInput::getEntity(std::vector<T>& data, uint64_t index) const
-{
-    if (index >= dimensions[0])
-        throw "Index out of bounds!";
-
-    switch (mode) {
-    case 1:
-        std::copy(_data + offsets[index], _data + offsets[index] + subSizes[0] * entityTypeSizes[index], data);
-        break;
-    case 2:
-        char *d = cache.getEntity(index, file);
-        std::copy(d, d + subSizes[0] * entityTypeSizes[index], data);
-        break;
-    case 3:
-        // todo
-        break;
     }
 }
 

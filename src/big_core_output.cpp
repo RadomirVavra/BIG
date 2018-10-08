@@ -14,61 +14,6 @@ BigCoreOutput::BigCoreOutput(uint64_t numberOfImages, uint64_t imageHeight, uint
 BigCoreOutput::~BigCoreOutput()
 {
     closeFile();
-    delete[] _data;
-}
-
-void BigCoreOutput::openFile(const std::string& fileName)
-{
-    // close current file
-    closeFile();
-    changed = true;
-
-    // open new file
-    file.open(fileName, std::ios_base::binary | std::ios_base::out);
-    if (!file) throw "Unable to open file for writing!";
-
-    // write magic number
-    file.write(MAGIC.c_str(), CHUNK_LENGTH);
-
-    // write meta-data, but do not write the data itself
-    for (const auto& id : CoreChunkIdsArray) {
-        if (!writeChunk(id)) throw "Error while writing file!";
-    }
-
-    // reserve space in a memory or the file
-    reserve();
-}
-
-void BigCoreOutput::writeFile(const std::string& fileName)
-{
-    if (!file || !fileName.empty()) {
-        // close current file
-        if (file) closeFile();
-        changed = true;
-
-        // open new file
-        file.open(fileName, std::ios_base::binary | std::ios_base::out);
-        if (!file) throw "Unable to open file for writing!";
-
-        // write magic number
-        file.write(MAGIC.c_str(), CHUNK_LENGTH);
-
-        // write meta-data, but do not write the data itself
-        for (const auto& id : CoreChunkIdsArray) {
-            if (!writeChunk(id)) throw "Error while writing file!";
-        }
-    }
-
-    if (changed) writeData();
-
-}
-
-void BigCoreOutput::closeFile()
-{
-    if (file.is_open()) {
-        if (changed) writeData();
-        file.close();
-    }
 }
 
 void BigCoreOutput::setParameters(uint64_t numberOfImages, uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes, const std::vector<DataOrderIds>& dataOrder, const std::vector<DataTypes>& dataType)
@@ -82,25 +27,89 @@ void BigCoreOutput::setParameters(uint64_t numberOfImages, uint64_t imageHeight,
     this->dataType = dataType;
 }
 
-void BigCoreOutput::reserve()
+void BigCoreOutput::openFile(const std::string& fileName)
 {
-    if (locked) return;
+    // close current file
+    closeFile();
+
+    // open file
+    file.open(fileName, std::ios_base::binary | std::ios_base::out); // todo: we will need to re-read entity to cache, and to re-write entity index (when inserting new entity) and entity id to zero (for removing)
+    if (!file) throw "Unable to open file for writing!";
+
+    // write magic number
+    file.write(MAGIC.c_str(), CHUNK_LENGTH);
+
+    // lock dimensions of the container and prepare supporting structures
     locked = true;
     setSupportingStructures();
-    if (dataSize <= maxMemorySize) {
-        memorySize = dataSize;
-        _data = new char[memorySize];
+}
+
+void BigCoreOutput::closeFile()
+{
+    if (file.is_open()) {
+
+        // write meta-data, but do not write the data itself
+        file.seekp(0, std::ios_base::end);
+        for (const auto& id : CoreChunkIds_) {
+            if (!writeChunk(id)) throw "Error while writing file!";
+        }
+
+        cache.flush(file);
+
+        file.close();
     }
-    else {
-        writeData();
+    cache.clear();
+    locked = false;
+}
+
+void BigCoreOutput::addData(std::shared_ptr<const char> data)
+{
+    cache.clear();
+    for (uint64_t i = 0; i != dimensions[0]; ++i) {
+        if (dataPositions[i] == 0) {
+            file.seekp(0, std::ios_base::end);
+            const auto id = CoreChunkIds::DATA;
+            file.write(reinterpret_cast<const char*>(&id), CHUNK_LENGTH);
+            uint64_t length = entitySizes[i] + (entitySizes[i] % CHUNK_LENGTH > 0) ? CHUNK_LENGTH - entitySizes[i] % CHUNK_LENGTH : 0;
+            file.write(reinterpret_cast<const char*>(&length), sizeof(length));
+            file.write(reinterpret_cast<const char*>(&i), sizeof(i));
+            dataPositions[i] = file.tellp();
+        }
+        else {
+            file.seekp(dataPositions[i]);
+        }
+        file.write(data.get() + offsets[i], entitySizes[i]);
+        const uint64_t zero = 0;
+        file.write(reinterpret_cast<const char*>(&zero), CHUNK_LENGTH - entitySizes[i] % CHUNK_LENGTH);
     }
 }
 
-void BigCoreOutput::reserve(uint64_t bytes)
+void BigCoreOutput::flushCache()
 {
-    setMaxMemorySize(bytes);
-    reserve();
+    cache.flush(file);
 }
+
+// TODO
+// ------------------------------------------------------------------
+//// Removes the last entity.
+//void BigCoreOutput::pop_back()
+//{
+//    // todo
+//}
+//
+//// Removes entity specified by its index.
+//void BigCoreOutput::erase(uint64_t index)
+//{
+//    // todo
+//}
+//
+//// Swaps entities specified by their numbers.
+//void BigCoreOutput::swap(uint64_t index1, uint64_t index2)
+//{
+//    // todo
+//}
+// ------------------------------------------------------------------
+
 
 
 bool BigCoreOutput::writeChunk(CoreChunkIds id)
@@ -134,51 +143,27 @@ bool BigCoreOutput::writeChunk(CoreChunkIds id)
     case CoreChunkIds::DATA_ORDER:
     {
         file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
-        uint64_t length = static_cast<uint64_t>(std::ceil((dataOrder.size() * sizeof(DataOrderIds)) / static_cast<double>(CHUNK_LENGTH))) * CHUNK_LENGTH;
+        uint64_t l = dataOrder.size() * sizeof(DataTypes);
+        uint64_t length = l + (l % CHUNK_LENGTH > 0) ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0;
         file.write(reinterpret_cast<const char*>(&length), sizeof(length));
         for (const auto& i : dataOrder) {
             file.write(reinterpret_cast<const char*>(&i), sizeof(DataOrderIds));
         }
-        file.write(reinterpret_cast<const char*>(&zero), length - dataOrder.size() * sizeof(DataOrderIds));
+        file.write(reinterpret_cast<const char*>(&zero), length - l);
         break;
     }
     case CoreChunkIds::DATA_TYPE:
     {
         file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
-        uint64_t length = static_cast<uint64_t>(std::ceil((dataType.size() * sizeof(DataTypes)) / static_cast<double>(CHUNK_LENGTH))) * CHUNK_LENGTH;
+        uint64_t l = dataType.size() * sizeof(DataTypes);
+        uint64_t length = l + (l % CHUNK_LENGTH > 0) ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0;
         file.write(reinterpret_cast<const char*>(&length), sizeof(length));
         for (const auto& i : dataType) {
             file.write(reinterpret_cast<const char*>(&i), sizeof(DataTypes));
         }
-        file.write(reinterpret_cast<const char*>(&zero), length - dataType.size() * sizeof(DataTypes));
+        file.write(reinterpret_cast<const char*>(&zero), length - l);
         break;
     }
     }
     return !file.fail();
-}
-
-bool BigCoreOutput::writeData()
-{
-    if (dataPosition == 0) {
-        const auto id = CoreChunkIds::DATA;
-        file.write(reinterpret_cast<const char*>(&id), CHUNK_LENGTH);
-        const uint64_t n = static_cast<uint64_t>(std::ceil(dataSize / static_cast<double>(CHUNK_LENGTH)));
-        const uint64_t length = n * CHUNK_LENGTH;
-        file.write(reinterpret_cast<const char*>(&length), sizeof(length));
-        dataPosition = file.tellp();
-        if (!isInMemory()) {
-            const uint64_t zero = 0;
-            for (uint64_t i = 0; i != n; ++i) {
-                file.write(reinterpret_cast<const char*>(&zero), CHUNK_LENGTH);
-            }
-        }
-    }
-    else {
-        file.seekp(dataPosition);
-    }
-    if (isInMemory()) {
-        file.write(_data, dataSize);
-        const uint64_t zero = 0;
-        file.write(reinterpret_cast<const char*>(&zero), CHUNK_LENGTH - dataSize % CHUNK_LENGTH);
-    }
 }

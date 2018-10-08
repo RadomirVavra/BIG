@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\big_cache.h" />
     <ClInclude Include="..\..\include\big_core_base.h" />
+    <ClInclude Include="..\..\include\big_core_consts.h" />
     <ClInclude Include="..\..\include\big_core_input.h" />
     <ClInclude Include="..\..\include\big_core_output.h" />
   </ItemGroup>
