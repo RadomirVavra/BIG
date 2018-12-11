@@ -19,17 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\big_cache.h" />
-    <ClInclude Include="..\..\include\big_core_base.h" />
-    <ClInclude Include="..\..\include\big_core_consts.h" />
-    <ClInclude Include="..\..\include\big_core_input.h" />
+    <ClInclude Include="..\..\include\big_cache.hpp" />
+    <ClInclude Include="..\..\include\big_cache_read.hpp" />
+    <ClInclude Include="..\..\include\big_consts.hpp" />
+    <ClInclude Include="..\..\include\big_core_base.hpp" />
+    <ClInclude Include="..\..\include\big_core_read.hpp" />
     <ClInclude Include="..\..\include\big_core_output.h" />
+    <ClInclude Include="..\..\include\big_core_read_info.hpp" />
+    <ClInclude Include="..\..\include\big_read_at_once.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\big_cache.cpp" />
     <ClCompile Include="..\..\src\big_core_base.cpp" />
-    <ClCompile Include="..\..\src\big_core_input.cpp" />
+    <ClCompile Include="..\..\src\big_core_read.cpp" />
+    <ClCompile Include="..\..\src\big_core_read_info.cpp" />
     <ClCompile Include="..\..\src\big_core_output.cpp" />
+    <ClCompile Include="..\..\src\big_read_at_once.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96DCF2A3-35D9-489E-8092-F045F4A0ECE4}</ProjectGuid>
