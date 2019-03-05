@@ -69,13 +69,13 @@ namespace big
     void BigCoreBase::initSupportingStructures()
     {
         initDimensions();
-        initEntityTypeSizes();
         initSubSizes();
+        initEntityDataTypes();
+        initEntityTypeSizes();
         initEntitySizes();
         initDataSize();
-        initOffsets();
         initOrderMap();
-        dataPositions.resize(dimensions[0], 0);
+        initDataPositions();
     }
 
     void BigCoreBase::initDimensions()
@@ -99,19 +99,6 @@ namespace big
         }
     }
 
-    void BigCoreBase::initEntityTypeSizes()
-    {
-        entityTypeSizes.clear();
-        if (dataType.size() == 1) {
-            entityTypeSizes.resize(dimensions[0], typeSizes[static_cast<uint64_t>(dataType[0])]);
-        }
-        else {
-            for (uint64_t i = 1; i != dataType.size(); ++i) {
-                entityTypeSizes.push_back(typeSizes[static_cast<uint64_t>(dataType[i])]);
-            }
-        }
-    }
-
     void BigCoreBase::initSubSizes()
     {
         uint64_t n = dimensions.size();
@@ -121,6 +108,32 @@ namespace big
             subSizes[i - 1] = subSizes[i] * dimensions[i];
         }
     }
+
+    void BigCoreBase::initEntityDataTypes()
+    {
+        entityDataTypes.clear();
+        if (dataType.size() == 1) {
+            entityDataTypes.resize(dimensions[0], dataType[0]);
+        }
+        else {
+            entityDataTypes.assign(dataType.begin() + 1, dataType.end());
+        }
+    }
+
+    void BigCoreBase::initEntityTypeSizes()
+    {
+        entityTypeSizes.clear();
+        for (const auto &type : entityDataTypes) entityTypeSizes.push_back(typeSizes[static_cast<uint64_t>(type)]);
+        //if (dataType.size() == 1) {
+        //    entityTypeSizes.resize(dimensions[0], typeSizes[static_cast<uint64_t>(dataType[0])]);
+        //}
+        //else {
+        //    for (uint64_t i = 1; i != dataType.size(); ++i) {
+        //        entityTypeSizes.push_back(typeSizes[static_cast<uint64_t>(dataType[i])]);
+        //    }
+        //}
+    }
+
 
     void BigCoreBase::initEntitySizes()
     {
@@ -133,26 +146,35 @@ namespace big
     void BigCoreBase::initDataSize()
     {
         dataSize = 0;
-        for (const auto ts : entityTypeSizes) {
-            dataSize += subSizes[0] * ts;
-        }
-    }
-
-    void BigCoreBase::initOffsets()
-    {
-        uint64_t offset = 0;
-        for (uint64_t i = 0; i != dimensions[0]; ++i) {
-            offsets.push_back(offset);
-            offset += subSizes[0] * entityTypeSizes[i];
+        for (const auto& es : entitySizes) {
+            dataSize += es;
         }
     }
 
     void BigCoreBase::initOrderMap()
     {
-        orderMap.clear();
+        //orderMap.clear();
+        orderMap.resize(100); // todo: max chunk number
         for (uint64_t i = 0; i != dataOrder.size(); ++i) {
-            orderMap[dataOrder[i]] = i;
+            orderMap[static_cast<uint16_t>(dataOrder[i])] = i;
         }
+
+        numberOfImagesOrder = orderMap[static_cast<uint64_t>(ChunkIds::NUMBER_OF_IMAGES)];
+        imageHeightOrder = orderMap[static_cast<uint64_t>(ChunkIds::IMAGE_HEIGHT)];
+        imageWidthOrder = orderMap[static_cast<uint64_t>(ChunkIds::IMAGE_WIDTH)];
+        numberOfPlanesOrder = orderMap[static_cast<uint64_t>(ChunkIds::NUMBER_OF_PLANES)];
+
+
+        //i0 = indices[numberOfImagesOrder];
+        //i1 = indices[imageHeightOrder];
+        //i2 = indices[imageWidthOrder];
+        //i3 = indices[numberOfPlanesOrder];
+
+    }
+
+    void BigCoreBase::initDataPositions()
+    {
+        dataPositions.resize(dimensions[0], 0);
     }
 
 }

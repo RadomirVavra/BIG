@@ -33,11 +33,11 @@ namespace big
         // Move-assignment operator.
         BigCoreRead &operator=(BigCoreRead &&rhs) = default;
 
-
+    public:
 
         // Returns element in the given image at given row, column and (color) plane. Does not check bounds.
         template<typename T>
-        T operator() (uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
+        T get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane = 0);
 
         // Returns element in the given image at given row, column and (color) plane. Checks bounds.
         template<typename T>
@@ -46,15 +46,15 @@ namespace big
         // Returns pointer to the entity specified by its index.
         std::shared_ptr<const char> operator[] (uint64_t index);
 
-        // Returns the entity specified by its index. Values are casted to the specified data type.
+        // Returns the entity specified by its index. Values are converted to the specified data type.
         template<typename T>
-        std::shared_ptr<const T> getEntity(uint64_t index);
+        std::vector<T> getEntity(uint64_t index);
 
-        // Returns the image specified by its number. Values are casted to the specified data type.
+        // Returns the image specified by its number. Values are converted to the specified data type.
         template<typename T>
-        std::shared_ptr<T> getImage(uint64_t imageNum);
+        std::vector<T> getImage(uint64_t imageNum);
 
-
+    public:
 
         // Loads all data into cache, if possible. Does nothing if data are bigger than cache size.
         void loadToCache() { cache.load(file); }
@@ -65,6 +65,9 @@ namespace big
 
         // Releases all memory allocated by cache.
         void clearCache() { cache.clear(); }
+
+        // Reduces memory usage by freeing least recently used entities.
+        void shrinkCache() { cache.shrink(); }
 
         // Reduces memory usage by freeing least recently used entities.
         void shrinkCache(uint64_t bytes) { cache.setSize(bytes); cache.shrink(); }

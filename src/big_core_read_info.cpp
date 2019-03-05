@@ -9,20 +9,23 @@ namespace big
         if (!file) throw "Unable to open file for reading!";
 
         // check header
-        char buffer[CHUNK_LENGTH];
-        file.read(buffer, CHUNK_LENGTH);
-        for (size_t i = 0; i != CHUNK_LENGTH; ++i) {
-            if (buffer[i] != MAGIC[i]) throw "File format is not BIG format!";
-        }
+        std::string buffer(CHUNK_LENGTH, ' ');
+        file.read(&buffer[0], CHUNK_LENGTH);
+        if (buffer != MAGIC) throw "File format is not BIG format!";
 
         // load meta-data and remember position of the data
         while (file) {
             ChunkIds id;
             uint64_t length;
-            if (!readChunk(id, length) || !readData(id, length)) {
+            if (!readChunk(id, length)) {
+                if (file.eof()) break;
+                else throw "Error while reading file!";
+            }
+            if (!readData(id, length)) {
                 throw "Error while reading file!";
             }
         }
+        file.clear();
 
         // prepare supporting structures
         initSupportingStructures();

@@ -19,14 +19,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="big_core_input_test.cpp" />
-    <ClCompile Include="big_core_output_test.cpp" />
+    <ClCompile Include="big_core_read_info_test.cpp" />
+    <ClCompile Include="big_core_read_test.cpp" />
+    <ClCompile Include="big_core_write_test.cpp" />
     <ClCompile Include="big_core_test.cpp" />
+    <ClCompile Include="common.cpp" />
+    <ClCompile Include="conversion.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\big\big.vcxproj">
       <Project>{96dcf2a3-35d9-489e-8092-f045f4a0ece4}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F5EF7EA2-60E3-4EDB-8F7D-EE2D62CF447B}</ProjectGuid>
@@ -93,7 +99,7 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

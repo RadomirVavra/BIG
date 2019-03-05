@@ -21,12 +21,7 @@ namespace big
         struct Entity
         {
             std::shared_ptr<char> data;
-            DataTypes dataType;
-            std::shared_ptr<uint8_t> data_uint8_t;
-            std::shared_ptr<uint16_t> data_uint16_t;
-            uint64_t dataSize = 0;
             std::list<uint64_t>::iterator it;
-            //bool dirty = false;
         };
 
         std::vector<Entity> entities;           // entities currently stored in a memory
@@ -35,77 +30,141 @@ namespace big
         uint64_t currentSize = 0;               // size of the used memory
         uint64_t maxSize = DEFAULT_CACHE_SIZE;  // the maximal size of usable memory
 
-        std::vector<uint64_t>& entitySizes = std::vector<uint64_t>();   // sizes of the entities
-        std::vector<uint64_t>& dataPositions = std::vector<uint64_t>(); // positions of the entities in a file
+        std::vector<uint64_t>& entitySizes;// = std::vector<uint64_t>();    // sizes of the entities
+        std::vector<uint64_t>& dataPositions;// = std::vector<uint64_t>();  // positions of the entities in a file
+        std::vector<DataTypes>& dataTypes;
+        std::ifstream& file;                        // attached file
 
     public:
 
-        void initialize(std::vector<uint64_t>& entitySizes, std::vector<uint64_t>& dataPositions) { this->entitySizes = entitySizes; this->dataPositions = dataPositions; entities.resize(entitySizes.size()); }
+        BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes)
+            : file(file), entitySizes(entitySizes), dataPositions(dataPositions), dataTypes(dataTypes)
+        {
+            entities.resize(entitySizes.size());
+        }
 
         void setSize(uint64_t maxSize) { this->maxSize = maxSize; }
 
         uint64_t getSize() { return currentSize; }
 
-        void load(std::ifstream &file);
+        void load(std::ifstream &file)
+        {
+            uint64_t totalSize = 0;
+            for (const auto & entitySize : entitySizes) totalSize += entitySize;
+            if (totalSize <= maxSize) {
+                for (uint64_t index = 0; index != entities.size(); ++index) {
+                    if (entities[index].data != nullptr) continue;
+                    pull(index);
+                }
+            }
+        }
 
-        void clear();
+        void clear()
+        {
+            while (!lru_list.empty()) pop();
+        }
 
-        void shrink();
+        void shrink()
+        {
+            while (currentSize > maxSize) pop();
+        }
 
-        // save dirty entities from the cache to a file
-        void flush(std::ofstream &file);
-
-        std::shared_ptr<char> getEntity(uint64_t index, std::ifstream &file);
-
-        void addEntity(std::shared_ptr<char> data, uint64_t index, std::ofstream &file);
+        // Returns pointer to the entity specified by its index.
+        std::shared_ptr<const char> operator[] (uint64_t index)
+        {
+            Entity& entity = entities[index];
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) insert(index);
+                else {
+                    std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+                    return data;
+                }
+            }
+            else {
+                lru_list.splice(lru_list.end(), lru_list, entity.it);
+            }
+            return entity.data;
+        }
 
         template<typename T>
-        T getElement(uint64_t entityID, uint64_t index, std::ifstream &file);
+        std::vector<T> getEntity(uint64_t index)
+        {
+            Entity& entity = entities[index];
+            std::shared_ptr<char> data = entity.data;
+            if (data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+                }
+            }
+            else {
+                lru_list.splice(lru_list.end(), lru_list, entity.it);
+            }
+
+            std::vector<T> vec;
+
+            switch (dataTypes[index])
+            {
+            case DataTypes::UINT8_T:
+                vec.reserve(entitySizes[index]);
+                for (uint64_t i = 0; i != entitySizes[index]; ++i) {
+                    vec.push_back(convert<T, uint8_t>(reinterpret_cast<uint8_t*>(data.get())[i]));
+                }
+                return vec;
+            case DataTypes::UINT16_T:
+                vec.reserve(entitySizes[index] / 2);
+                for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                    vec.push_back(convert<T, uint16_t>(reinterpret_cast<uint16_t*>(data.get())[i]));
+                }
+                return vec;
+            }
+            return vec;
+        }
 
         template<typename T>
-        void addElement(const T& value, uint64_t entityID, uint64_t index, std::ofstream &file);
+        T getElement(uint64_t entityID, uint64_t index);
+
+
+        template<typename T>
+        T getElementFromMemory(uint64_t entityID, uint64_t index);
 
     private:
 
-        std::shared_ptr<char> insert(const uint64_t& index, std::ifstream &file);
+        template<typename Tdst, typename Tsrc>
+        Tdst convert(Tsrc value);
 
-        void save(std::shared_ptr<char> data, uint64_t index, std::ofstream &file);
-    };
+        template<typename T>
+        T getElementFromFile(uint64_t entityID, uint64_t index);
 
-    template<typename T>
-    T BigCacheRead::getElement(uint64_t entityID, uint64_t index, std::ifstream &file)
-    {
-        Entity& entity = entities[entityID];
-        //if (entity.data == nullptr) {
-        //    if (entitySizes[entityID] <= maxSize) {
-        //        return reinterpret_cast<T*>(insert(entityID, file).get())[index];
-        //    }
-        //    else {
-        //        // read data directly
-        //        file.seekg(dataPositions[entityID] + index * sizeof(T));
-        //        T val;
-        //        file.read(reinterpret_cast<char*>(&val), sizeof(T));
-        //        return val;
-        //    }
-        //}
-        lru_list.splice(lru_list.end(), lru_list, entity.it);
-
-        switch (entity.dataType)
+        void pop()
         {
-        case DataTypes::UINT8_T:
-            uint8_t& val = entity.data_uint8_t.get()[index];
-            if (std::is_same<T, uint8_t>::value) return val;
-            else if (std::is_same<T, uint16_t>::value) return val * 256 + 127;
-            else if (std::is_same<T, uint32_t>::value) return val * 256 * 65536 + 8388607;
-            else if (std::is_same<T, uint32_t>::value) return val * 256 * 65536 + 8388607;
-            else if (std::is_same<T, uint64_t>::value) return static_cast<uint64_t>(val) * 256ull * 65536ull * 4294967296ull + 36028797018963967ull;
-            break;
+            entities[lru_list.front()].data.reset();
+            currentSize -= entitySizes[lru_list.front()];
+            lru_list.pop_front();
         }
 
+        void pull(uint64_t index)
+        {
+            entities[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+            file.seekg(dataPositions[index]);
+            file.read(entities[index].data.get(), entitySizes[index]);
+            currentSize += entitySizes[index];
+            entities[index].it = lru_list.insert(lru_list.end(), index);
+        }
 
-        return reinterpret_cast<T*>(entity.data.get())[index];
-    }
-
+        void insert(const uint64_t& index)
+        {
+            while (currentSize + entitySizes[index] > maxSize) pop();
+            pull(index);
+        }
+    };
 }
 
 #endif // _BIG_CACHE_READ_H_

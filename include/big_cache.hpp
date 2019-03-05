@@ -101,7 +101,7 @@
 //                    file.seekp(0, std::ios_base::end);
 //                    const auto id = ChunkIds::DATA;
 //                    file.write(reinterpret_cast<const char*>(&id), CHUNK_LENGTH);
-//                    uint64_t length = entitySizes[entityID] + (entitySizes[entityID] % CHUNK_LENGTH > 0) ? CHUNK_LENGTH - entitySizes[entityID] % CHUNK_LENGTH : 0;
+//                    uint64_t length = entitySizes[entityID] + (entitySizes[entityID] % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - entitySizes[entityID] % CHUNK_LENGTH : 0);
 //                    file.write(reinterpret_cast<const char*>(&length), sizeof(length));
 //                    file.write(reinterpret_cast<const char*>(&entityID), sizeof(entityID));
 //                    dataPositions[entityID] = file.tellp();

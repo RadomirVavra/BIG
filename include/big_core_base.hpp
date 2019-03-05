@@ -56,22 +56,22 @@ namespace big
         // Returns i_th dimension of the container.
         uint64_t getDimension(uint64_t i);
 
-        // Returns size of the outermost entity specified by its number.
+        // Returns size of the entity specified by its number.
         uint64_t getEntitySize(uint64_t index);
 
-        // Returns number of elements of an outermost entity.
+        // Returns the number of elements of each entity.
         uint64_t getEntityBaseSize();
 
-        // Returns data type of the outermost entity specified by its number.
+        // Returns data type of the entity specified by its number.
         DataTypes getEntityDataType(uint64_t index);
 
-        // Returns size of data type of the outermost entity specified by its number.
+        // Returns size of data type of the entity specified by its number.
         uint64_t getEntityTypeSize(uint64_t index);
 
         // Returns size of the given data type.
         static uint64_t getDataTypeSize(DataTypes dataType);
 
-        // Returns number of outermost entities.
+        // Returns number of entities.
         uint64_t getNumberOfEntities();
 
         // Returns total size of the data.
@@ -83,26 +83,29 @@ namespace big
         void initSupportingStructures();
 
     private:
-        // Do not call directly, use initSupportingStructures() method.
+
+        // Initialize dimensions of the data according to dataOrder.
         void initDimensions();
 
-        // Do not call directly, use initSupportingStructures() method.
-        void initEntityTypeSizes();
-
-        // Do not call directly, use initSupportingStructures() method.
+        // Initialize sizes of sub-blocks of the data according to dataOrder.
         void initSubSizes();
 
-        // Do not call directly, use initSupportingStructures() method.
+        void initEntityDataTypes();
+
+        // Initialize size of the data type for each entity.
+        void initEntityTypeSizes();
+
+        // Initialize size of each entity.
         void initEntitySizes();
 
-        // Do not call directly, use initSupportingStructures() method.
+        // Initialize entire size of the data.
         void initDataSize();
 
-        // Do not call directly, use initSupportingStructures() method.
-        void initOffsets();
-
-        // Do not call directly, use initSupportingStructures() method.
+        // Initialize mapping of data order to the current indices.
         void initOrderMap();
+
+        // Initialize positions of the data entities to zero.
+        void initDataPositions();
 
     protected:
 
@@ -113,14 +116,34 @@ namespace big
         std::vector<ChunkIds> dataOrder = defaultDataOrder;
         std::vector<DataTypes> dataType = defaultDataType;
 
-        std::vector<uint64_t> offsets;                      // offsets of the outermost entities
-        std::vector<uint64_t> entityTypeSizes;              // sizes of data types of the outermost entities
-        std::vector<uint64_t> entitySizes;                  // sizes of the outermost entities
         std::vector<uint64_t> dimensions;                   // dimensions of the data according to dataOrder
-        std::map<ChunkIds, uint64_t> orderMap;              // mapping of data order to the current indices
         std::vector<uint64_t> subSizes;                     // sizes of sub-blocks of data according to dataOrder
+        std::vector<uint64_t> entityTypeSizes;              // sizes of data types of the entities
+        std::vector<uint64_t> entitySizes;                  // sizes of the entities
+        std::vector<DataTypes> entityDataTypes;
         uint64_t dataSize = 0;                              // size of the data according to given dimensions and data types
+        //std::map<ChunkIds, uint64_t> orderMap;              // mapping of data order to the current indices
+        std::vector<uint64_t> orderMap;              // mapping of data order to the current indices
         std::vector<uint64_t> dataPositions;                // positions of the data entities in a file
+
+        uint64_t numberOfImagesOrder;
+        uint64_t imageHeightOrder;
+        uint64_t imageWidthOrder;
+        uint64_t numberOfPlanesOrder;
+
+        //uint64_t indices[4];
+
+        //uint64_t &i0;
+        //uint64_t &i1;
+        //uint64_t &i2;
+        //uint64_t &i3;
+
+        //const uint64_t &r0 = indices[0];
+        //const uint64_t &r1 = indices[1];
+        //const uint64_t &r2 = indices[2];
+        //const uint64_t &r3 = indices[3];
+
+
     };
 }
 

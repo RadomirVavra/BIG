@@ -12,6 +12,7 @@ namespace big
     class BigCoreReadInfo : public BigCoreBase
     {
     public:
+
         // Constructor. Opens file, reads parameters of the container, but does not read data.
         BigCoreReadInfo(const std::string& fileName);
 
@@ -35,7 +36,7 @@ namespace big
         // Reads chunk's id and its length.
         bool readChunk(ChunkIds& id, uint64_t& length);
 
-        // Reads chunk's data, e.g., numberOfImages, imageHeight, etc. Does not read the data itself, just remembers its position.
+        // Reads chunk's data, e.g., numberOfImages, imageHeight, etc. Does not read the data itself, just remembers their position.
         bool readData(ChunkIds id, uint64_t length);
 
     protected:
