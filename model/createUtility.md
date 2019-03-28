@@ -8,4 +8,4 @@ The utility accepts:
 * optionally, *data-types* of *entities* (otherwise, data-type is inferred from the image data files - half or float for the OpenEXR format and unsigned 8-bit integer for PNG format)
  
 Issues:
-* what data formats use, if entity is not an image (*permutation* starts with 2, 3, or 4) and data-types are not provided?
+* what data-types use, if entity is not an image (*permutation* starts with 2, 3, or 4) and data-types are not provided?
