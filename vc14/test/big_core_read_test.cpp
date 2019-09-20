@@ -124,42 +124,55 @@ namespace big_test
                     writeData(file, data2, n, 1);
                     writeData(file, data3, n, 2);
                 }
-                {
-                    big::BigCoreRead big("testCoreRead_Get3.big");
-                    Assert::AreEqual(2ull, big.getNumberOfImages());
-                    Assert::AreEqual(3ull, big.getImageHeight());
-                    Assert::AreEqual(5ull, big.getImageWidth());
-                    Assert::AreEqual(3ull, big.getNumberOfPlanes());
-                    const auto &dataOrder2 = big.getDataOrder();
-                    for (uint64_t i = 0; i != dataOrder2.size(); ++i) {
-                        Assert::AreEqual(dataOrder[i], dataOrder2[i]);
-                    }
-                    const auto &dataType2 = big.getDataType();
-                    for (uint64_t i = 0; i != dataType2.size(); ++i) {
-                        Assert::AreEqual(dataType[i], dataType2[i]);
-                    }
-                    std::shared_ptr<uint16_t> data = data1;
-                    uint64_t index = 0;
-                    for (uint64_t row = 0; row != 3; ++row) {
-                        for (uint64_t col = 0; col != 5; ++col) {
-                            for (uint64_t plane = 0; plane != 3; ++plane) {
-                                for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
-                                    uint16_t d = big.at<uint16_t>(imageNum, row, col, plane);
-                                    Assert::AreEqual(data.get()[index % n], d);
-                                    d = big.get<uint16_t>(imageNum, row, col, plane);
-                                    Assert::AreEqual(data.get()[index % n], d);
-                                    ++index;
-                                    if (index == n) data = data2;
-                                    else if (index == 2 * n) data = data3;
-                                }
-                            }
-                        }
-                    }
+				{
+					//catch exception, which is throw if dataorder is not correct
+					try
+					{
+						big::BigCoreRead big("testCoreRead_Get3.big");
+					
+						Assert::AreEqual(2ull, big.getNumberOfImages());
+						Assert::AreEqual(3ull, big.getImageHeight());
+						Assert::AreEqual(5ull, big.getImageWidth());
+						Assert::AreEqual(3ull, big.getNumberOfPlanes());
+					
+							const auto &dataOrder2 = big.getDataOrder();
+					
+					
+					
+					    for (uint64_t i = 0; i != dataOrder2.size(); ++i) { 
+							Assert::AreEqual(dataOrder[i], dataOrder2[i]);
+						}
+						const auto &dataType2 = big.getDataType();
+						for (uint64_t i = 0; i != dataType2.size(); ++i) {
+							Assert::AreEqual(dataType[i], dataType2[i]);
+						}
+						std::shared_ptr<uint16_t> data = data1;
+						uint64_t index = 0;
+						for (uint64_t row = 0; row != 3; ++row) {
+							for (uint64_t col = 0; col != 5; ++col) {
+								for (uint64_t plane = 0; plane != 3; ++plane) {
+									for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
+										uint16_t d = big.at<uint16_t>(imageNum, row, col, plane);
+										Assert::AreEqual(data.get()[index % n], d);
+										d = big.get<uint16_t>(imageNum, row, col, plane);
+										Assert::AreEqual(data.get()[index % n], d);
+										++index;
+										if (index == n) data = data2;
+										else if (index == 2 * n) data = data3;
+									}
+								}
+							}
+						}
+					}
+					catch (const char * str)
+					{
+						Assert::AreEqual(str, "This data order is not supported!");
+					}
                 }
             }
         }
 
-        TEST_METHOD(BigCoreRead_SmallCache)
+        TEST_METHOD(BigCoreRead_SmallCache) //Cache have size of one entity
         {
             {
                 uint64_t n = 3 * 5 * 3;
@@ -233,34 +246,45 @@ namespace big_test
                     writeData(file, data3, n, 2);
                 }
                 {
-                    big::BigCoreRead big("testCoreRead_SmallCache2.big", false, sizeof(uint16_t) * n);
-                    Assert::AreEqual(2ull, big.getNumberOfImages());
-                    Assert::AreEqual(3ull, big.getImageHeight());
-                    Assert::AreEqual(5ull, big.getImageWidth());
-                    Assert::AreEqual(3ull, big.getNumberOfPlanes());
-                    const auto &dataOrder2 = big.getDataOrder();
-                    for (uint64_t i = 0; i != dataOrder2.size(); ++i) {
-                        Assert::AreEqual(dataOrder[i], dataOrder2[i]);
-                    }
-                    const auto &dataType2 = big.getDataType();
-                    for (uint64_t i = 0; i != dataType2.size(); ++i) {
-                        Assert::AreEqual(dataType[i], dataType2[i]);
-                    }
-                    for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
-                        for (uint64_t row = 0; row != 3; ++row) {
-                            for (uint64_t col = 0; col != 5; ++col) {
-                                for (uint64_t plane = 0; plane != 3; ++plane) {
-                                    uint64_t index = row * 5 * 3 * 2 + col * 3 * 2 + plane * 2 + imageNum;
-                                    std::shared_ptr<uint16_t> data;
-                                    if (index / n == 0) data = data1;
-                                    else if (index / n == 1) data = data2;
-                                    else if (index / n == 2) data = data3;
-                                    uint16_t d = big.get<uint16_t>(imageNum, row, col, plane);
-                                    Assert::AreEqual(data.get()[index % n], d);
-                                }
-                            }
-                        }
-                    }
+					//catch exception, which is throw if dataorder is not correct
+					try {
+
+					
+						big::BigCoreRead big("testCoreRead_SmallCache2.big", false, sizeof(uint16_t) * n);
+				
+
+						Assert::AreEqual(2ull, big.getNumberOfImages());
+						Assert::AreEqual(3ull, big.getImageHeight());
+						Assert::AreEqual(5ull, big.getImageWidth());
+						Assert::AreEqual(3ull, big.getNumberOfPlanes());
+						const auto &dataOrder2 = big.getDataOrder();
+						for (uint64_t i = 0; i != dataOrder2.size(); ++i) {
+							Assert::AreEqual(dataOrder[i], dataOrder2[i]);
+						}
+						const auto &dataType2 = big.getDataType();
+						for (uint64_t i = 0; i != dataType2.size(); ++i) {
+							Assert::AreEqual(dataType[i], dataType2[i]);
+						}
+						for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
+							for (uint64_t row = 0; row != 3; ++row) {
+								for (uint64_t col = 0; col != 5; ++col) {
+									for (uint64_t plane = 0; plane != 3; ++plane) {
+										uint64_t index = row * 5 * 3 * 2 + col * 3 * 2 + plane * 2 + imageNum;
+										std::shared_ptr<uint16_t> data;
+										if (index / n == 0) data = data1;
+										else if (index / n == 1) data = data2;
+										else if (index / n == 2) data = data3;
+										uint16_t d = big.get<uint16_t>(imageNum, row, col, plane);
+										Assert::AreEqual(data.get()[index % n], d);
+									}
+								}
+							}
+						}
+					}
+					catch (const char * str)
+					{
+						Assert::AreEqual(str, "This data order is not supported!");
+					}
                 }
             }
         }
@@ -338,34 +362,42 @@ namespace big_test
                     writeData(file, data3, n, 2);
                 }
                 {
-                    big::BigCoreRead big("testCoreRead_ZeroCache2.big", false, 0);
-                    Assert::AreEqual(2ull, big.getNumberOfImages());
-                    Assert::AreEqual(3ull, big.getImageHeight());
-                    Assert::AreEqual(5ull, big.getImageWidth());
-                    Assert::AreEqual(3ull, big.getNumberOfPlanes());
-                    const auto &dataOrder2 = big.getDataOrder();
-                    for (uint64_t i = 0; i != dataOrder2.size(); ++i) {
-                        Assert::AreEqual(dataOrder[i], dataOrder2[i]);
-                    }
-                    const auto &dataType2 = big.getDataType();
-                    for (uint64_t i = 0; i != dataType2.size(); ++i) {
-                        Assert::AreEqual(dataType[i], dataType2[i]);
-                    }
-                    for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
-                        for (uint64_t row = 0; row != 3; ++row) {
-                            for (uint64_t col = 0; col != 5; ++col) {
-                                for (uint64_t plane = 0; plane != 3; ++plane) {
-                                    uint64_t index = row * 5 * 3 * 2 + col * 3 * 2 + plane * 2 + imageNum;
-                                    std::shared_ptr<uint16_t> data;
-                                    if (index / n == 0) data = data1;
-                                    else if (index / n == 1) data = data2;
-                                    else if (index / n == 2) data = data3;
-                                    uint16_t d = big.get<uint16_t>(imageNum, row, col, plane);
-                                    Assert::AreEqual(data.get()[index % n], d);
-                                }
-                            }
-                        }
-                    }
+					//catch exception, which is throw if dataorder is not correct
+					try
+					{
+						big::BigCoreRead big("testCoreRead_ZeroCache2.big", false, 0);
+						Assert::AreEqual(2ull, big.getNumberOfImages());
+						Assert::AreEqual(3ull, big.getImageHeight());
+						Assert::AreEqual(5ull, big.getImageWidth());
+						Assert::AreEqual(3ull, big.getNumberOfPlanes());
+						const auto &dataOrder2 = big.getDataOrder();
+						for (uint64_t i = 0; i != dataOrder2.size(); ++i) {
+							Assert::AreEqual(dataOrder[i], dataOrder2[i]);
+						}
+						const auto &dataType2 = big.getDataType();
+						for (uint64_t i = 0; i != dataType2.size(); ++i) {
+							Assert::AreEqual(dataType[i], dataType2[i]);
+						}
+						for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
+							for (uint64_t row = 0; row != 3; ++row) {
+								for (uint64_t col = 0; col != 5; ++col) {
+									for (uint64_t plane = 0; plane != 3; ++plane) {
+										uint64_t index = row * 5 * 3 * 2 + col * 3 * 2 + plane * 2 + imageNum;
+										std::shared_ptr<uint16_t> data;
+										if (index / n == 0) data = data1;
+										else if (index / n == 1) data = data2;
+										else if (index / n == 2) data = data3;
+										uint16_t d = big.get<uint16_t>(imageNum, row, col, plane);
+										Assert::AreEqual(data.get()[index % n], d);
+									}
+								}
+							}
+						}
+					}
+					catch (const char * str)
+					{
+						Assert::AreEqual(str, "This data order is not supported!");
+					}
                 }
             }
         }
@@ -632,28 +664,42 @@ namespace big_test
                     writeData(file, data3, n, 2);
                 }
                 {
-                    big::BigCoreRead big("testCoreRead_GetEntity3.big");
-                    for (uint64_t i = 0; i != 3; ++i) {
-                        auto vec = big.getEntity<uint16_t>(i);
-                        auto data = data1;
-                        if (i == 1) data = data2;
-                        else if (i == 2) data = data3;
-                        for (uint64_t index = 0; index != vec.size(); ++index) {
-                            Assert::AreEqual(data.get()[index], vec[index]);
-                        }
-                    }
+					//catch exception, which is throw if dataorder is not correct
+					try { 
+						big::BigCoreRead big("testCoreRead_GetEntity3.big");
+						for (uint64_t i = 0; i != 3; ++i) {
+							auto vec = big.getEntity<uint16_t>(i);
+							auto data = data1;
+							if (i == 1) data = data2;
+							else if (i == 2) data = data3;
+							for (uint64_t index = 0; index != vec.size(); ++index) {
+								Assert::AreEqual(data.get()[index], vec[index]);
+							}
+						}
+					}
+					catch (const char * str)
+					{
+						Assert::AreEqual(str, "This data order is not supported!");
+					}
                 }
                 {
-                    big::BigCoreRead big("testCoreRead_GetEntity3.big", false, 0);
-                    for (uint64_t i = 0; i != 3; ++i) {
-                        auto vec = big.getEntity<uint16_t>(i);
-                        auto data = data1;
-                        if (i == 1) data = data2;
-                        else if (i == 2) data = data3;
-                        for (uint64_t index = 0; index != vec.size(); ++index) {
-                            Assert::AreEqual(data.get()[index], vec[index]);
-                        }
-                    }
+					//catch exception, which is throw if dataorder is not correct
+					try {
+						big::BigCoreRead big("testCoreRead_GetEntity3.big", false, 0);
+						for (uint64_t i = 0; i != 3; ++i) {
+							auto vec = big.getEntity<uint16_t>(i);
+							auto data = data1;
+							if (i == 1) data = data2;
+							else if (i == 2) data = data3;
+							for (uint64_t index = 0; index != vec.size(); ++index) {
+								Assert::AreEqual(data.get()[index], vec[index]);
+							}
+						}
+					}
+					catch (const char * str)
+					{
+						Assert::AreEqual(str, "This data order is not supported!");
+					}
                 }
             }
         }
@@ -751,48 +797,62 @@ namespace big_test
                     writeData(file, data3, n, 2);
                 }
                 {
-                    big::BigCoreRead big("testCoreRead_GetImage3.big");
-                    auto vec1 = big.getImage<uint16_t>(0);
-                    auto vec2 = big.getImage<uint16_t>(1);
-                    std::shared_ptr<uint16_t> data;
-                    uint64_t index = 0;
-                    for (uint64_t row = 0; row != 3; ++row) {
-                        for (uint64_t col = 0; col != 5; ++col) {
-                            for (uint64_t plane = 0; plane != 3; ++plane) {
-                                auto vec = &vec1;
-                                for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
-                                    if (index / n == 0) data = data1;
-                                    else if (index / n == 1) data = data2;
-                                    else if (index / n == 2) data = data3;
-                                    Assert::AreEqual(data.get()[index % n], (*vec)[row * 5 * 3 + col * 3 + plane]);
-                                    ++index;
-                                    vec = &vec2;
-                                }
-                            }
-                        }
-                    }
+					//catch exception, which is throw if dataorder is not correct
+					try {
+						big::BigCoreRead big("testCoreRead_GetImage3.big");
+						auto vec1 = big.getImage<uint16_t>(0);
+						auto vec2 = big.getImage<uint16_t>(1);
+						std::shared_ptr<uint16_t> data;
+						uint64_t index = 0;
+						for (uint64_t row = 0; row != 3; ++row) {
+							for (uint64_t col = 0; col != 5; ++col) {
+								for (uint64_t plane = 0; plane != 3; ++plane) {
+									auto vec = &vec1;
+									for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
+										if (index / n == 0) data = data1;
+										else if (index / n == 1) data = data2;
+										else if (index / n == 2) data = data3;
+										Assert::AreEqual(data.get()[index % n], (*vec)[row * 5 * 3 + col * 3 + plane]);
+										++index;
+										vec = &vec2;
+									}
+								}
+							}
+						}
+					}
+					catch (const char * str)
+					{
+						Assert::AreEqual(str, "This data order is not supported!");
+					}
                 }
                 {
-                    big::BigCoreRead big("testCoreRead_GetImage3.big", false, 0);
-                    auto vec1 = big.getImage<uint16_t>(0);
-                    auto vec2 = big.getImage<uint16_t>(1);
-                    std::shared_ptr<uint16_t> data;
-                    uint64_t index = 0;
-                    for (uint64_t row = 0; row != 3; ++row) {
-                        for (uint64_t col = 0; col != 5; ++col) {
-                            for (uint64_t plane = 0; plane != 3; ++plane) {
-                                auto vec = &vec1;
-                                for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
-                                    if (index / n == 0) data = data1;
-                                    else if (index / n == 1) data = data2;
-                                    else if (index / n == 2) data = data3;
-                                    Assert::AreEqual(data.get()[index % n], (*vec)[row * 5 * 3 + col * 3 + plane]);
-                                    ++index;
-                                    vec = &vec2;
-                                }
-                            }
-                        }
-                    }
+					//catch exception, which is throw if dataorder is not correct
+					try {
+						big::BigCoreRead big("testCoreRead_GetImage3.big", false, 0);
+						auto vec1 = big.getImage<uint16_t>(0);
+						auto vec2 = big.getImage<uint16_t>(1);
+						std::shared_ptr<uint16_t> data;
+						uint64_t index = 0;
+						for (uint64_t row = 0; row != 3; ++row) {
+							for (uint64_t col = 0; col != 5; ++col) {
+								for (uint64_t plane = 0; plane != 3; ++plane) {
+									auto vec = &vec1;
+									for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
+										if (index / n == 0) data = data1;
+										else if (index / n == 1) data = data2;
+										else if (index / n == 2) data = data3;
+										Assert::AreEqual(data.get()[index % n], (*vec)[row * 5 * 3 + col * 3 + plane]);
+										++index;
+										vec = &vec2;
+									}
+								}
+							}
+						}
+					}
+					catch (const char * str)
+					{
+						Assert::AreEqual(str, "This data order is not supported!");
+					}
                 }
             }
         }

@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include <cmath> 
 
 #include "../../include/half.hpp"
 
@@ -1161,13 +1162,19 @@ namespace big_test
                     Assert::AreEqual(exp[i], w1);
                 }
             }
-            // float
+            // float 
             {
                 std::vector<float> val = { 2.0f, 1.0f, 0.99999999f, 0.99f, 0.1f, 0, -0.1f, -0.99f, -1.0f, -2.0f };
                 std::vector<double> exp = { 2.0, 1.0, 0.99999999, 0.99, 0.1, 0, -0.1, -0.99, -1.0, -2.0 };
-                for (int i = 0; i != val.size(); ++i) {
-                    double w1 = convert<double, float>(val[i]);
-                    Assert::AreEqual(exp[i], w1);
+				for (int i = 0; i != val.size(); ++i) {
+					double w1 = convert<double, float>(val[i]);
+					double deviation = exp[i] - w1;
+					bool isSame;
+					(abs(deviation) < 0.0000001) ? isSame = true : isSame = false;
+
+						
+					
+                    Assert::AreEqual(isSame, true);
                 }
             }
             // double

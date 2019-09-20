@@ -71,6 +71,11 @@ namespace big
                 file.read(reinterpret_cast<char*>(&order), sizeof(ChunkIds));
                 dataOrder.push_back(order);
             }
+			if (dataOrder != defaultDataOrder)
+			{
+				throw "This data order is not supported!";
+				
+			}
             file.seekg(length - n * sizeof(ChunkIds), std::ios_base::cur);
             break;
         }

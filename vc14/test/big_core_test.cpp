@@ -40,28 +40,42 @@ namespace big_test
                 writeData(file, data3, n, 2);
             }
             {
-                big::BigCoreRead big_read("testCore_Reorganize1.big");
-                big::BigCoreWrite big_write("testCore_Reorganize2.big", big_read.getNumberOfImages(), big_read.getImageHeight(), big_read.getImageWidth(), big_read.getNumberOfPlanes(), big::defaultDataOrder, std::vector<big::DataTypes>{big::DataTypes::UINT16_T});
-                for (uint64_t imageNum = 0; imageNum < big_read.getNumberOfImages(); ++imageNum) {
-                    std::vector<uint16_t> data = big_read.getImage<uint16_t>(imageNum);
-                    std::shared_ptr<uint16_t> d = std::shared_ptr<uint16_t>(data.data(), [](uint16_t *d) {});
-                    big_write.addEntity(d, imageNum);
-                }
+				//catch exception, which is throw if dataorder is not correct
+				try {
+					big::BigCoreRead big_read("testCore_Reorganize1.big");				
+					big::BigCoreWrite big_write("testCore_Reorganize2.big", big_read.getNumberOfImages(), big_read.getImageHeight(), big_read.getImageWidth(), big_read.getNumberOfPlanes(), big::defaultDataOrder, std::vector<big::DataTypes>{big::DataTypes::UINT16_T});
+					for (uint64_t imageNum = 0; imageNum < big_read.getNumberOfImages(); ++imageNum) {
+						std::vector<uint16_t> data = big_read.getImage<uint16_t>(imageNum);
+						std::shared_ptr<uint16_t> d = std::shared_ptr<uint16_t>(data.data(), [](uint16_t *d) {});
+						big_write.addEntity(d, imageNum);
+					}
+				}
+				catch (const char * str)
+				{
+					Assert::AreEqual(str, "This data order is not supported!");
+				}
             }
             {
-                big::BigCoreRead big1("testCore_Reorganize1.big");
-                big::BigCoreRead big2("testCore_Reorganize2.big");
-                for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
-                    for (uint64_t row = 0; row != 3; ++row) {
-                        for (uint64_t col = 0; col != 5; ++col) {
-                            for (uint64_t plane = 0; plane != 3; ++plane) {
-                                uint16_t d1 = big1.get<uint16_t>(imageNum, row, col, plane);
-                                uint16_t d2 = big2.get<uint16_t>(imageNum, row, col, plane);
-                                Assert::AreEqual(d1, d2);
-                            }
-                        }
-                    }
-                }
+				//catch exception, which is throw if dataorder is not correct
+				try {
+					big::BigCoreRead big1("testCore_Reorganize1.big");
+					big::BigCoreRead big2("testCore_Reorganize2.big");
+					for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
+						for (uint64_t row = 0; row != 3; ++row) {
+							for (uint64_t col = 0; col != 5; ++col) {
+								for (uint64_t plane = 0; plane != 3; ++plane) {
+									uint16_t d1 = big1.get<uint16_t>(imageNum, row, col, plane);
+									uint16_t d2 = big2.get<uint16_t>(imageNum, row, col, plane);
+									Assert::AreEqual(d1, d2);
+								}
+							}
+						}
+					}
+				}
+				catch (const char * str)
+				{
+					Assert::AreEqual(str, "This data order is not supported!");
+				}
             }
         }
 
