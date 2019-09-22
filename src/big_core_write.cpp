@@ -2,14 +2,13 @@
 
 namespace big
 {
-    BigCoreWrite::BigCoreWrite(const std::string& fileName, uint64_t numberOfImages, uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes, const std::vector<ChunkIds>& dataOrder, const std::vector<DataTypes>& dataType)
+    BigCoreWrite::BigCoreWrite(const std::string& fileName,  uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes, const std::vector<ChunkIds>& dataOrder)
     {
-        this->numberOfImages = numberOfImages;
+        this->numberOfImages = 0;
         this->imageHeight = imageHeight;
         this->imageWidth = imageWidth;
         this->numberOfPlanes = numberOfPlanes;
         this->dataOrder = dataOrder;
-        this->dataType = dataType;
 
         // prepare supporting structures
         initSupportingStructures();
@@ -35,24 +34,35 @@ namespace big
     }
 
     template<typename T>
-    void BigCoreWrite::addEntity(std::shared_ptr<T> data, uint64_t index)
-    {
-        if (index >= dimensions[0])
-            throw "Index out of bounds!";
+	void BigCoreWrite::addEntity(std::shared_ptr<T> data, uint64_t index, DataTypes dataType)
+	{
+		numberOfImages++;
+		file.seekp(CHUNK_LENGTH);
+		if (!writeChunk(ChunkIds::NUMBER_OF_IMAGES)) throw "Error while writing file!";
+		file.seekp(0, std::ios_base::end);
 
-        const auto id = ChunkIds::DATA;
-        file.write(reinterpret_cast<const char*>(&id), CHUNK_LENGTH);
-        uint64_t complement = entitySizes[index] % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - entitySizes[index] % CHUNK_LENGTH : 0;
-        uint64_t length = CHUNK_LENGTH + entitySizes[index] + complement;
-        file.write(reinterpret_cast<const char*>(&length), sizeof(length));
-        file.write(reinterpret_cast<const char*>(&index), sizeof(index));
-        file.write(reinterpret_cast<const char*>(data.get()), entitySizes[index]);
+		if (index > numberOfImages)
+			throw "Index out of bounds!";
+
+		big::BigCoreBase::setEntitySizes(dataType); 
+
+		//uint64_t entitySize = dimensions[1] * dimensions[2] * dimensions[3] * typeSizes[static_cast<uint64_t>(dataType)]; //quicker compute but dont load supporting information about entity
+
+		const auto id = ChunkIds::DATA;
+		file.write(reinterpret_cast<const char*>(&id), CHUNK_LENGTH);
+		uint64_t complement = entitySizes[index] % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - entitySizes[index] % CHUNK_LENGTH : 0;
+		uint64_t length = 2*CHUNK_LENGTH + entitySizes[index] + complement;
+		file.write(reinterpret_cast<const char*>(&length), sizeof(length));
+		file.write(reinterpret_cast<const char*>(&index), sizeof(index));
+		file.write(reinterpret_cast<const char*>(&dataType), sizeof(DataTypes)); //write data type
+		file.write(reinterpret_cast<const char*>(data.get()), entitySizes[index]);
         const uint64_t zero = 0;
         file.write(reinterpret_cast<const char*>(&zero), complement);
+
     }
 
-    template void BigCoreWrite::addEntity(std::shared_ptr<uint8_t> data, uint64_t index);
-    template void BigCoreWrite::addEntity(std::shared_ptr<uint16_t> data, uint64_t index);
+    template void BigCoreWrite::addEntity(std::shared_ptr<uint8_t> data, uint64_t index, DataTypes dataType);
+    template void BigCoreWrite::addEntity(std::shared_ptr<uint16_t> data, uint64_t index, DataTypes dataType);
 
 
 
@@ -96,7 +106,7 @@ namespace big
             file.write(reinterpret_cast<const char*>(&zero), length - l);
             break;
         }
-        case ChunkIds::DATA_TYPE:
+      /*  case ChunkIds::DATA_TYPE:
         {
             file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
             uint64_t l = dataType.size() * sizeof(DataTypes);
@@ -107,7 +117,7 @@ namespace big
             }
             file.write(reinterpret_cast<const char*>(&zero), length - l);
             break;
-        }
+        }*/
         }
         return !file.fail();
     }

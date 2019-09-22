@@ -26,7 +26,7 @@ namespace big_test
     void checkMetaData(std::ifstream &file, const std::vector<uint64_t> &metaData);
 
     template <typename T>
-    void checkData(std::ifstream &file, std::shared_ptr<T> data, uint64_t n, uint64_t index);
+    void checkData(std::ifstream &file, std::shared_ptr<T> data, uint64_t n, uint64_t index, uint64_t dataType);
 
     void writeHeader(std::ofstream &file);
 

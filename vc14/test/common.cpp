@@ -21,17 +21,19 @@ namespace big_test
     }
 
     template <typename T>
-    void checkData(std::ifstream &file, std::shared_ptr<T> data, uint64_t n, uint64_t index)
+    void checkData(std::ifstream &file, std::shared_ptr<T> data, uint64_t n, uint64_t index, uint64_t dataType)
     {
         uint64_t number;
         file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
-        Assert::AreEqual(7ull, number);
+        Assert::AreEqual(6ull, number);
         file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
         uint64_t complement = (sizeof(T) * n) % big::CHUNK_LENGTH > 0 ? big::CHUNK_LENGTH - (sizeof(T) * n) % big::CHUNK_LENGTH : 0;
-        uint64_t length = big::CHUNK_LENGTH + sizeof(T) * n + complement;
+        uint64_t length = 2*big::CHUNK_LENGTH + sizeof(T) * n + complement;
         Assert::AreEqual(length, number);
         file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
         Assert::AreEqual(index, number);
+		file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
+		Assert::AreEqual(dataType, number);
         for (uint64_t i = 0; i != n; ++i) {
             T number;
             file.read(reinterpret_cast<char*>(&number), sizeof(T));
@@ -42,17 +44,17 @@ namespace big_test
         Assert::AreEqual(0ull, zero);
     }
 
-    template void checkData(std::ifstream &file, std::shared_ptr<uint8_t> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<uint16_t> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<uint32_t> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<uint64_t> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<int8_t> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<int16_t> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<int32_t> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<int64_t> data, uint64_t n, uint64_t index);
+    template void checkData(std::ifstream &file, std::shared_ptr<uint8_t> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<uint16_t> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<uint32_t> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<uint64_t> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<int8_t> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<int16_t> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<int32_t> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<int64_t> data, uint64_t n, uint64_t index, uint64_t dataType);
     //template void checkData(std::ifstream &file, std::shared_ptr<half> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<float> data, uint64_t n, uint64_t index);
-    template void checkData(std::ifstream &file, std::shared_ptr<double> data, uint64_t n, uint64_t index);
+    template void checkData(std::ifstream &file, std::shared_ptr<float> data, uint64_t n, uint64_t index, uint64_t dataType);
+    template void checkData(std::ifstream &file, std::shared_ptr<double> data, uint64_t n, uint64_t index, uint64_t dataType);
 
     void writeHeader(std::ofstream &file)
     {

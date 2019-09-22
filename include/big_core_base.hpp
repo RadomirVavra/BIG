@@ -53,6 +53,7 @@ namespace big
         // Returns type(s) of data.
         const std::vector<DataTypes>& getDataType() { return dataType; }
 
+
         // Returns i_th dimension of the container.
         uint64_t getDimension(uint64_t i);
 
@@ -76,6 +77,10 @@ namespace big
 
         // Returns total size of the data.
         uint64_t getSize() { return dataSize; }
+
+		//Set size of entity 
+		void setEntitySizes(DataTypes dataType);
+
 
     protected:
 
@@ -107,6 +112,7 @@ namespace big
         // Initialize positions of the data entities to zero.
         void initDataPositions();
 
+		
     protected:
 
         uint64_t numberOfImages = 0;

@@ -15,7 +15,7 @@ namespace big
 
         // Constructor. Constructs an empty container, sets dimensions of the container, data order and data type(s).
         // Opens the given file and writes meta-data, but does not write the data itself yet.
-        BigCoreWrite(const std::string& fileName, uint64_t numberOfImages, uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes = 1, const std::vector<ChunkIds>& dataOrder = defaultDataOrder, const std::vector<DataTypes>& dataType = defaultDataType);
+        BigCoreWrite(const std::string& fileName,  uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes = 1, const std::vector<ChunkIds>& dataOrder = defaultDataOrder);
 
         // Copy constructor forbidden.
         BigCoreWrite(const BigCoreWrite &) = delete;
@@ -36,7 +36,7 @@ namespace big
 
         // Adds an entity to the container and writes it to the file.
         template<typename T>
-        void addEntity(std::shared_ptr<T> data, uint64_t index);
+        void addEntity(std::shared_ptr<T> data, uint64_t index, DataTypes dataType);
 
     protected:
 

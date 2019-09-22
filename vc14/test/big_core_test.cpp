@@ -43,11 +43,11 @@ namespace big_test
 				//catch exception, which is throw if dataorder is not correct
 				try {
 					big::BigCoreRead big_read("testCore_Reorganize1.big");				
-					big::BigCoreWrite big_write("testCore_Reorganize2.big", big_read.getNumberOfImages(), big_read.getImageHeight(), big_read.getImageWidth(), big_read.getNumberOfPlanes(), big::defaultDataOrder, std::vector<big::DataTypes>{big::DataTypes::UINT16_T});
+					big::BigCoreWrite big_write("testCore_Reorganize2.big", big_read.getImageHeight(), big_read.getImageWidth(), big_read.getNumberOfPlanes(), big::defaultDataOrder);
 					for (uint64_t imageNum = 0; imageNum < big_read.getNumberOfImages(); ++imageNum) {
 						std::vector<uint16_t> data = big_read.getImage<uint16_t>(imageNum);
 						std::shared_ptr<uint16_t> d = std::shared_ptr<uint16_t>(data.data(), [](uint16_t *d) {});
-						big_write.addEntity(d, imageNum);
+						big_write.addEntity(d, imageNum, big::DataTypes::UINT16_T);
 					}
 				}
 				catch (const char * str)
