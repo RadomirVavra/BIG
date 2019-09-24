@@ -67,9 +67,7 @@ namespace big_test
                     writeMetaData(file, metaData);
                     writeData(file, data1, n, 0);
                     writeData(file, data2, n, 1);*/
-					big::BigCoreWrite big("testCoreRead_Get2.big", 3, 5, 3); // default data order
-					big.addEntity(data1, 0, big::DataTypes::UINT8_T);
-					big.addEntity(data2, 1, big::DataTypes::UINT8_T);
+					
                 }
                 {
                     big::BigCoreRead big("testCoreRead_Get2.big");
@@ -187,12 +185,16 @@ namespace big_test
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
                 {
-                    std::ofstream file("testCoreRead_SmallCache1.big", std::ios_base::binary | std::ios_base::out);
+                    /*std::ofstream file("testCoreRead_SmallCache1.big", std::ios_base::binary | std::ios_base::out);
                     writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
+                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4}; , 6, 8, 1 
                     writeMetaData(file, metaData);
                     writeData(file, data1, n, 0);
-                    writeData(file, data2, n, 1);
+                    writeData(file, data2, n, 1);*/
+					big::BigCoreWrite big("testCoreRead_SmallCache1.big", 3, 5, 3); // default data order
+					big.addEntity(data1, 0, big::DataTypes::UINT8_T);
+					big.addEntity(data2, 1, big::DataTypes::UINT8_T);
+
                 }
                 {
                     big::BigCoreRead big("testCoreRead_SmallCache1.big", false, n);
@@ -206,7 +208,7 @@ namespace big_test
                     }
                     const auto &dataType = big.getDataType();
                     for (uint64_t i = 0; i != dataType.size(); ++i) {
-                        Assert::AreEqual(big::defaultDataType[i], dataType[i]);
+                        Assert::AreEqual(big::defaultDataType[0], dataType[i]);
                     }
                     std::shared_ptr<uint8_t> data = data1;
                     uint64_t index = 0;
@@ -225,6 +227,8 @@ namespace big_test
                 }
             }
             {
+
+				//this test throw exception, is not upgrade to new datatype
                 std::vector<big::ChunkIds> dataOrder = { big::ChunkIds::IMAGE_HEIGHT, big::ChunkIds::IMAGE_WIDTH, big::ChunkIds::NUMBER_OF_PLANES, big::ChunkIds::NUMBER_OF_IMAGES };
                 std::vector<big::DataTypes> dataType = { big::DataTypes::UINT16_T };
                 uint16_t n = 5 * 3 * 2;
@@ -303,12 +307,15 @@ namespace big_test
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
                 {
-                    std::ofstream file("testCoreRead_ZeroCache1.big", std::ios_base::binary | std::ios_base::out);
+                    /*std::ofstream file("testCoreRead_ZeroCache1.big", std::ios_base::binary | std::ios_base::out);
                     writeHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
                     writeMetaData(file, metaData);
                     writeData(file, data1, n, 0);
-                    writeData(file, data2, n, 1);
+                    writeData(file, data2, n, 1);*/
+					big::BigCoreWrite big("testCoreRead_ZeroCache1.big", 3, 5, 3); // default data order
+					big.addEntity(data1, 0, big::DataTypes::UINT8_T);
+					big.addEntity(data2, 1, big::DataTypes::UINT8_T);
                 }
                 {
                     big::BigCoreRead big("testCoreRead_ZeroCache1.big", false, 0);
@@ -322,7 +329,7 @@ namespace big_test
                     }
                     const auto &dataType = big.getDataType();
                     for (uint64_t i = 0; i != dataType.size(); ++i) {
-                        Assert::AreEqual(big::defaultDataType[i], dataType[i]);
+                        Assert::AreEqual(big::defaultDataType[0], dataType[i]);
                     }
                     std::shared_ptr<uint8_t> data = data1;
                     uint64_t index = 0;
@@ -418,12 +425,15 @@ namespace big_test
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
                 {
-                    std::ofstream file("testCoreRead_CacheTest1.big", std::ios_base::binary | std::ios_base::out);
+                    /*std::ofstream file("testCoreRead_CacheTest1.big", std::ios_base::binary | std::ios_base::out);
                     writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
+                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1
                     writeMetaData(file, metaData);
                     writeData(file, data1, n, 0);
-                    writeData(file, data2, n, 1);
+                    writeData(file, data2, n, 1);*/
+					big::BigCoreWrite big("testCoreRead_CacheTest1.big", 3, 5, 3); // default data order
+					big.addEntity(data1, 0, big::DataTypes::UINT8_T);
+					big.addEntity(data2, 1, big::DataTypes::UINT8_T);
                 }
                 {
                     big::BigCoreRead big("testCoreRead_CacheTest1.big", true);
@@ -461,12 +471,15 @@ namespace big_test
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
                 {
-                    std::ofstream file("testCoreRead_Operator1.big", std::ios_base::binary | std::ios_base::out);
+                   /* std::ofstream file("testCoreRead_Operator1.big", std::ios_base::binary | std::ios_base::out);
                     writeHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
                     writeMetaData(file, metaData);
                     writeData(file, data1, n, 0);
-                    writeData(file, data2, n, 1);
+                    writeData(file, data2, n, 1);*/
+					big::BigCoreWrite big("testCoreRead_Operator1.big", 3, 5, 3); // default data order
+					big.addEntity(data1, 0, big::DataTypes::UINT8_T);
+					big.addEntity(data2, 1, big::DataTypes::UINT8_T);
                 }
                 {
                     big::BigCoreRead big("testCoreRead_Operator1.big", false, n);
@@ -480,7 +493,7 @@ namespace big_test
                     }
                     const auto &dataType = big.getDataType();
                     for (uint64_t i = 0; i != dataType.size(); ++i) {
-                        Assert::AreEqual(big::defaultDataType[i], dataType[i]);
+                        Assert::AreEqual(big::defaultDataType[0], dataType[i]);
                     }
 
                     auto d1 = big[0];
@@ -528,7 +541,7 @@ namespace big_test
                     }
                     const auto &dataType = big.getDataType();
                     for (uint64_t i = 0; i != dataType.size(); ++i) {
-                        Assert::AreEqual(big::defaultDataType[i], dataType[i]);
+                        Assert::AreEqual(big::defaultDataType[0], dataType[i]);
                     }
 
                     auto d1 = big[0];
@@ -576,11 +589,13 @@ namespace big_test
                 std::shared_ptr<uint8_t> data{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (int i = 0; i != n; ++i) data.get()[i] = i;
                 {
-                    std::ofstream file("testCoreRead_GetEntity1.big", std::ios_base::binary | std::ios_base::out);
-                    writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
-                    writeMetaData(file, metaData);
-                    writeData(file, data, n, 0);
+                    //std::ofstream file("testCoreRead_GetEntity1.big", std::ios_base::binary | std::ios_base::out);
+                    //writeHeader(file);
+                    //std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4 }; //6, 8, 1
+                    //writeMetaData(file, metaData);
+                    //writeData(file, data, n, 0);
+					big::BigCoreWrite big("testCoreRead_GetEntity1.big", 2, 4, 1); // default data order
+					big.addEntity(data, 0, big::DataTypes::UINT8_T);
                 }
                 {
                     big::BigCoreRead big("testCoreRead_GetEntity1.big");
@@ -612,12 +627,15 @@ namespace big_test
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
                 {
-                    std::ofstream file("testCoreRead_GetEntity2.big", std::ios_base::binary | std::ios_base::out);
-                    writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
-                    writeMetaData(file, metaData);
-                    writeData(file, data1, n, 0);
-                    writeData(file, data2, n, 1);
+                    //std::ofstream file("testCoreRead_GetEntity2.big", std::ios_base::binary | std::ios_base::out);
+                    //writeHeader(file);
+                    //std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4}; //, 6, 8, 1
+                    //writeMetaData(file, metaData);
+                    //writeData(file, data1, n, 0);
+                    //writeData(file, data2, n, 1);
+					big::BigCoreWrite big("testCoreRead_GetEntity2.big", 3, 5, 3); // default data order
+					big.addEntity(data1, 0, big::DataTypes::UINT8_T);
+					big.addEntity(data2, 1, big::DataTypes::UINT8_T);
                 }
                 {
                     big::BigCoreRead big("testCoreRead_GetEntity2.big");
@@ -643,6 +661,8 @@ namespace big_test
                 }
             }
             {
+
+				//this test is not change for datatype in data chunk, but is OK because throw exception, if dataorder is not 1 2 3 4
                 std::vector<big::ChunkIds> dataOrder = { big::ChunkIds::IMAGE_HEIGHT, big::ChunkIds::IMAGE_WIDTH, big::ChunkIds::NUMBER_OF_PLANES, big::ChunkIds::NUMBER_OF_IMAGES };
                 std::vector<big::DataTypes> dataType = { big::DataTypes::UINT16_T };
                 uint16_t n = 5 * 3 * 2;
@@ -717,11 +737,13 @@ namespace big_test
                 std::shared_ptr<uint8_t> data{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (int i = 0; i != n; ++i) data.get()[i] = i;
                 {
-                    std::ofstream file("testCoreRead_GetImage1.big", std::ios_base::binary | std::ios_base::out);
-                    writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
-                    writeMetaData(file, metaData);
-                    writeData(file, data, n, 0);
+                    //std::ofstream file("testCoreRead_GetImage1.big", std::ios_base::binary | std::ios_base::out);
+                    //writeHeader(file);
+                    //std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4}; //, 6, 8, 1 
+                    //writeMetaData(file, metaData);
+                    //writeData(file, data, n, 0);
+					big::BigCoreWrite big("testCoreRead_GetImage1.big", 2, 4, 1); // default data order
+					big.addEntity(data, 0, big::DataTypes::UINT8_T);
                 }
                 {
                     big::BigCoreRead big("testCoreRead_GetImage1.big");
@@ -745,12 +767,15 @@ namespace big_test
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
                 {
-                    std::ofstream file("testCoreRead_GetImage2.big", std::ios_base::binary | std::ios_base::out);
-                    writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
-                    writeMetaData(file, metaData);
-                    writeData(file, data1, n, 0);
-                    writeData(file, data2, n, 1);
+                    //std::ofstream file("testCoreRead_GetImage2.big", std::ios_base::binary | std::ios_base::out);
+                    //writeHeader(file);
+                    //std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1
+                    //writeMetaData(file, metaData);
+                    //writeData(file, data1, n, 0);
+                    //writeData(file, data2, n, 1);
+					big::BigCoreWrite big("testCoreRead_GetImage2.big", 3, 5, 3); // default data order
+					big.addEntity(data1, 0, big::DataTypes::UINT8_T);
+					big.addEntity(data2, 1, big::DataTypes::UINT8_T);
                 }
                 {
                     big::BigCoreRead big("testCoreRead_GetImage2.big");
@@ -776,6 +801,7 @@ namespace big_test
                 }
             }
             {
+				//this test is not change for datatype in data chunk, but is OK because throw exception, if dataorder is not 1 2 3 4
                 std::vector<big::ChunkIds> dataOrder = { big::ChunkIds::IMAGE_HEIGHT, big::ChunkIds::IMAGE_WIDTH, big::ChunkIds::NUMBER_OF_PLANES, big::ChunkIds::NUMBER_OF_IMAGES };
                 std::vector<big::DataTypes> dataType = { big::DataTypes::UINT16_T };
                 uint16_t n = 5 * 3 * 2;

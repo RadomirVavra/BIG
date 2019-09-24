@@ -14,9 +14,9 @@ namespace big_test
         {
             {
                 {
-                    big::BigCoreWrite big("testCoreWrite_Constructor1.big", 1, 4);
+                    big::BigCoreWrite big("testCoreWrite_Constructor1.big", 2, 4);
 
-                    Assert::AreEqual(1ull, big.getNumberOfImages());
+                    Assert::AreEqual(0ull, big.getNumberOfImages());
                     Assert::AreEqual(2ull, big.getImageHeight());
                     Assert::AreEqual(4ull, big.getImageWidth());
                     Assert::AreEqual(1ull, big.getNumberOfPlanes());
@@ -24,18 +24,18 @@ namespace big_test
                 {
                     std::ifstream file("testCoreWrite_Constructor1.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
+                    std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4};//, 6, 8, 1 
                     checkMetaData(file, metaData);
                 }
             }
             {
                 {
-                    big::BigCoreWrite big("testCoreWrite_Constructor2.big", 2, 5, 3);
+					big::BigCoreWrite big("testCoreWrite_Constructor2.big", 3, 5, 3);
                 }
                 {
                     std::ifstream file("testCoreWrite_Constructor2.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
+                    std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1
                     checkMetaData(file, metaData);
                 }
             }
@@ -43,12 +43,12 @@ namespace big_test
                 std::vector<big::ChunkIds> dataOrder = { big::ChunkIds::IMAGE_HEIGHT, big::ChunkIds::IMAGE_WIDTH, big::ChunkIds::NUMBER_OF_PLANES, big::ChunkIds::NUMBER_OF_IMAGES };
                 std::vector<big::DataTypes> dataType = { big::DataTypes::UINT16_T };
                 {
-                    big::BigCoreWrite big("testCoreWrite_Constructor3.big", 2, 5, 3, dataOrder);
+                    big::BigCoreWrite big("testCoreWrite_Constructor3.big", 3, 5, 3, dataOrder);
                 }
                 {
                     std::ifstream file("testCoreWrite_Constructor3.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 2, 3, 4, 1, 6, 8, 2 };
+                    std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 2, 3, 4, 1 };//, 6, 8, 2
                     checkMetaData(file, metaData);
                 }
             }

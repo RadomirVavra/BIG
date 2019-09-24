@@ -16,12 +16,12 @@ namespace big_test
                 {
                     std::ofstream file("testCoreReadInfo_Constructor1.big", std::ios_base::binary | std::ios_base::out);
                     writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
+                    std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1
                     writeMetaData(file, metaData);
                 }
                 {
                     big::BigCoreReadInfo big("testCoreReadInfo_Constructor1.big");
-                    Assert::AreEqual(1ull, big.getNumberOfImages());
+                    Assert::AreEqual(0ull, big.getNumberOfImages());
                     Assert::AreEqual(2ull, big.getImageHeight());
                     Assert::AreEqual(4ull, big.getImageWidth());
                     Assert::AreEqual(1ull, big.getNumberOfPlanes());
@@ -31,7 +31,7 @@ namespace big_test
                     }
                     const auto &dataType = big.getDataType();
                     for (uint64_t i = 0; i != dataType.size(); ++i) {
-                        Assert::AreEqual(big::defaultDataType[i], dataType[i]);
+                        Assert::AreEqual(big::defaultDataType[0], dataType[i]);
                     }
                 }
             }
@@ -39,12 +39,12 @@ namespace big_test
                 {
                     std::ofstream file("testCoreReadInfo_Constructor2.big", std::ios_base::binary | std::ios_base::out);
                     writeHeader(file);
-                    std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4, 6, 8, 1 };
+                    std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1
                     writeMetaData(file, metaData);
                 }
                 {
                     big::BigCoreReadInfo big("testCoreReadInfo_Constructor2.big");
-                    Assert::AreEqual(2ull, big.getNumberOfImages());
+                    Assert::AreEqual(0ull, big.getNumberOfImages());
                     Assert::AreEqual(3ull, big.getImageHeight());
                     Assert::AreEqual(5ull, big.getImageWidth());
                     Assert::AreEqual(3ull, big.getNumberOfPlanes());
@@ -54,7 +54,7 @@ namespace big_test
                     }
                     const auto &dataType = big.getDataType();
                     for (uint64_t i = 0; i != dataType.size(); ++i) {
-                        Assert::AreEqual(big::defaultDataType[i], dataType[i]);
+                        Assert::AreEqual(big::defaultDataType[0], dataType[i]);
                     }
                 }
             }

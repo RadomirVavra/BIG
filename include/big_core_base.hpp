@@ -120,7 +120,7 @@ namespace big
         uint64_t imageWidth = 0;
         uint64_t numberOfPlanes = 1;
         std::vector<ChunkIds> dataOrder = defaultDataOrder;
-        std::vector<DataTypes> dataType = defaultDataType;
+        std::vector<DataTypes> dataType;
 
         std::vector<uint64_t> dimensions;                   // dimensions of the data according to dataOrder
         std::vector<uint64_t> subSizes;                     // sizes of sub-blocks of data according to dataOrder
