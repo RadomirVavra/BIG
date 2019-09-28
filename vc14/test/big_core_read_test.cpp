@@ -301,11 +301,14 @@ namespace big_test
         TEST_METHOD(BigCoreRead_ZeroCache)
         {
             {
+				std::vector<std::shared_ptr<uint8_t>> data;
                 uint64_t n = 3 * 5 * 3;
                 std::shared_ptr<uint8_t> data1{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data1.get()[i] = i;
+				data.push_back(data1);
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
+				data.push_back(data2);
                 {
                     /*std::ofstream file("testCoreRead_ZeroCache1.big", std::ios_base::binary | std::ios_base::out);
                     writeHeader(file);
@@ -331,10 +334,11 @@ namespace big_test
                     for (uint64_t i = 0; i != dataType.size(); ++i) {
                         Assert::AreEqual(big::defaultDataType[0], dataType[i]);
                     }
-                    std::shared_ptr<uint8_t> data = data1;
+					
                     uint64_t index = 0;
                     for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
-                        for (uint64_t row = 0; row != 3; ++row) {
+						checkAtandGet(big, data[imageNum], imageNum, 3, 5, 3, n);
+                        /*for (uint64_t row = 0; row != 3; ++row) {
                             for (uint64_t col = 0; col != 5; ++col) {
                                 for (uint64_t plane = 0; plane != 3; ++plane) {
                                     uint8_t d = big.get<uint8_t>(imageNum, row, col, plane);
@@ -343,8 +347,9 @@ namespace big_test
                                     if (index == n) data = data2;
                                 }
                             }
-                        }
+                        }*/
                     }
+					
                 }
             }
             {

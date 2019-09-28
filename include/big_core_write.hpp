@@ -3,9 +3,11 @@
 #define _BIG_CORE_WRITE_H_
 
 #include "big_core_base.hpp"
+#include "half.hpp"
 
 #include <fstream>
 #include <memory>
+
 
 namespace big
 {

@@ -2,6 +2,8 @@
 
 namespace big
 {
+	using half_float::half;
+	using half_float::half_cast;
     BigCoreWrite::BigCoreWrite(const std::string& fileName,  uint64_t imageHeight, uint64_t imageWidth, uint64_t numberOfPlanes, const std::vector<ChunkIds>& dataOrder)
     {
         this->numberOfImages = 0;
@@ -63,8 +65,15 @@ namespace big
 
     template void BigCoreWrite::addEntity(std::shared_ptr<uint8_t> data, uint64_t index, DataTypes dataType);
     template void BigCoreWrite::addEntity(std::shared_ptr<uint16_t> data, uint64_t index, DataTypes dataType);
-
-
+	template void BigCoreWrite::addEntity(std::shared_ptr<uint32_t> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<uint64_t> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<int8_t> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<int16_t> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<int32_t> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<int64_t> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<half> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<float> data, uint64_t index, DataTypes dataType);
+	template void BigCoreWrite::addEntity(std::shared_ptr<double> data, uint64_t index, DataTypes dataType);
 
     bool BigCoreWrite::writeChunk(ChunkIds id)
     {
