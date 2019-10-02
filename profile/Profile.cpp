@@ -1,8 +1,8 @@
 #include <fstream>
 #include <memory>
 
-#include "../../include/big_consts.hpp"
-#include "../../include/big_core_read.hpp"
+#include "../include/big_consts.hpp"
+#include "../include/big_core_read.hpp"
 
 namespace big_test
 {

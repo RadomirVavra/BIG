@@ -4,9 +4,9 @@
 #include <memory>
 #include "CppUnitTest.h"
 
-#include "../../include/big_consts.hpp"
-#include "../../include/big_core_read.hpp"
-#include "../../include/half.hpp"
+#include "../include/big_consts.hpp"
+#include "../include/big_core_read.hpp"
+#include "../include/half.hpp"
 
 namespace Microsoft {
     namespace VisualStudio {

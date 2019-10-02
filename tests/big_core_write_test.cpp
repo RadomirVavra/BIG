@@ -1,6 +1,6 @@
 #include "common.hpp"
 
-#include "../../include/big_core_write.hpp"
+#include "../include/big_core_write.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

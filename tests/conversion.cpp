@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include <cmath> 
 
-#include "../../include/half.hpp"
+#include "../include/half.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

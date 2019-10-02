@@ -112,19 +112,100 @@ namespace big
 
             switch (dataTypes[index])
             {
-            case DataTypes::UINT8_T:
-                vec.reserve(entitySizes[index]);
-                for (uint64_t i = 0; i != entitySizes[index]; ++i) {
-                    vec.push_back(convert<T, uint8_t>(reinterpret_cast<uint8_t*>(data.get())[i]));
+                case DataTypes::UINT8_T:
+                {
+                    vec.reserve(entitySizes[index]);
+                    for (uint64_t i = 0; i != entitySizes[index]; ++i) {
+                        vec.push_back(convert<T, uint8_t>(reinterpret_cast<uint8_t*>(data.get())[i]));
+                    }
+                    return vec;
                 }
-                return vec;
-            case DataTypes::UINT16_T:
-                vec.reserve(entitySizes[index] / 2);
-                for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                    vec.push_back(convert<T, uint16_t>(reinterpret_cast<uint16_t*>(data.get())[i]));
+                case DataTypes::UINT16_T:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, uint16_t>(reinterpret_cast<uint16_t*>(data.get())[i]));
+                    }
+                    return vec;
                 }
-                return vec;
+                case DataTypes::UINT32_T:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, uint32_t>(reinterpret_cast<uint32_t*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+                case DataTypes::UINT64_T:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, uint64_t>(reinterpret_cast<uint64_t*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+                case DataTypes::INT8_T:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, int8_t>(reinterpret_cast<int8_t*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+                case DataTypes::INT16_T:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, int16_t>(reinterpret_cast<int16_t*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+                case DataTypes::INT32_T:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, int32_t>(reinterpret_cast<int32_t*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+                case DataTypes::INT64_T:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, int64_t>(reinterpret_cast<int64_t*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+               /* case DataTypes::HALF:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, half>(reinterpret_cast<half*>(data.get())[i]));
+                    }
+                    return vec;
+                }*/
+                case DataTypes::FLOAT:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, float>(reinterpret_cast<float*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+                case DataTypes::DOUBLE:
+                {
+                    vec.reserve(entitySizes[index] / 2);
+                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                        vec.push_back(convert<T, double>(reinterpret_cast<double*>(data.get())[i]));
+                    }
+                    return vec;
+                }
+        
+        
             }
+
+        
+        
             return vec;
         }
 

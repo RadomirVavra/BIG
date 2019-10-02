@@ -1,6 +1,6 @@
 #include "common.hpp"
 
-#include "../../include/big_core_read_info.hpp"
+#include "../include/big_core_read_info.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
