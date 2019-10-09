@@ -36,9 +36,13 @@ namespace big
 
     public:
 
-        // Adds an entity to the container and writes it to the file.
+        // Adds an entity to the container and writes it to the file, to selected index
         template<typename T>
         void addEntity(std::shared_ptr<T> data, uint64_t index, DataTypes dataType);
+
+        // Adds an entity to the container and writes it to the file, to actual index
+        template<typename T>
+        void pushEntity(std::shared_ptr<T> data, DataTypes dataType);
 
     protected:
 

@@ -18,11 +18,7 @@ namespace big_test
                 std::shared_ptr<uint8_t> data{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (int i = 0; i != n; ++i) data.get()[i] = i;
                 {
-                    //std::ofstream file("testCoreRead_Get1.big", std::ios_base::binary | std::ios_base::out);
-                    //writeHeader(file);
-                    //std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4,  };//6, 8, 1
-                    //writeMetaData(file, metaData);
-                    //writeData(file, data, n, 0);
+                    
 					big::BigCoreWrite big("testCoreRead_Get1.big", 2, 4, 1 ); // default data order
 					big.addEntity(data, 0, big::DataTypes::UINT8_T);
                 }
@@ -36,10 +32,7 @@ namespace big_test
                     for (uint64_t i = 0; i != dataOrder.size(); ++i) {
                         Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
                     }
-                    /*const auto &dataType = big.getDataType();
-                    for (uint64_t i = 0; i != dataType.size(); ++i) {
-                        Assert::AreEqual(big::defaultDataType[i], dataType[i]);
-                    }*/
+                   
                     uint64_t index = 0;
                     uint64_t imageNum = 0;
                     uint64_t plane = 0;
@@ -338,16 +331,7 @@ namespace big_test
                     uint64_t index = 0;
                     for (uint64_t imageNum = 0; imageNum != 2; ++imageNum) {
 						checkAtandGet(big, data[imageNum], imageNum, 3, 5, 3, n);
-                        /*for (uint64_t row = 0; row != 3; ++row) {
-                            for (uint64_t col = 0; col != 5; ++col) {
-                                for (uint64_t plane = 0; plane != 3; ++plane) {
-                                    uint8_t d = big.get<uint8_t>(imageNum, row, col, plane);
-                                    Assert::AreEqual(data.get()[index % n], d);
-                                    ++index;
-                                    if (index == n) data = data2;
-                                }
-                            }
-                        }*/
+                        
                     }
 					
                 }
