@@ -129,6 +129,18 @@ namespace big
     template<> double BigCacheRead::convert(float value) { return static_cast<double>(value); }
     template<> double BigCacheRead::convert(double value) { return value; }
 
+	template<> half BigCacheRead::convert(uint8_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(uint16_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(uint32_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(uint64_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(int8_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(int16_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(int32_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(int64_t value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(half value) { return value; }
+	template<> half BigCacheRead::convert(float value) { return half_cast<half>(value); }
+	template<> half BigCacheRead::convert(double value) { return half_cast<half>(value); }
+
 
 
     template<typename T>

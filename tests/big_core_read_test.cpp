@@ -60,6 +60,9 @@ namespace big_test
                     writeMetaData(file, metaData);
                     writeData(file, data1, n, 0);
                     writeData(file, data2, n, 1);*/
+					big::BigCoreWrite big("testCoreRead_Get2.big", 3, 5, 3); // default data order
+					big.pushEntity(data1, big::DataTypes::UINT8_T);
+					big.pushEntity(data2, big::DataTypes::UINT8_T);
 					
                 }
                 {
