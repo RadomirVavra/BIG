@@ -880,13 +880,12 @@ namespace big_test
                 }
             }
         }
-        /*TEST_METHOD(BigCoreRead_diffrentDataTypes) //to do
+        TEST_METHOD(BigCoreRead_diffrentDataTypes) //to do
         {
             
             uint16_t n = 5 * 3 * 2;
             std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
             for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
-         
             std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
             for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
             std::shared_ptr<uint32_t> data3{ new uint32_t[n], [](uint32_t *p) {delete[] p; } };
@@ -909,17 +908,17 @@ namespace big_test
             for (int i = 0; i != n; ++i) data11.get()[i] = 2 * static_cast<half> (n) + i;
             {
                 big::BigCoreWrite big("testCoreRead_DiffrentDataTypes1.big", 2, 3, 5);
-                big.addEntity(data1, 0, big::DataTypes::UINT16_T);
-                big.addEntity(data2, 1, big::DataTypes::UINT8_T);
-                big.addEntity(data3, 2, big::DataTypes::UINT32_T);
-                big.addEntity(data4, 3, big::DataTypes::UINT64_T);
-                big.addEntity(data5, 4, big::DataTypes::INT8_T);
-                big.addEntity(data6, 5, big::DataTypes::INT16_T);
-                big.addEntity(data7, 6, big::DataTypes::INT32_T);
-                big.addEntity(data8, 7, big::DataTypes::INT64_T);
-                big.addEntity(data9, 8, big::DataTypes::FLOAT);
-                big.addEntity(data10, 9, big::DataTypes::DOUBLE);
-                big.addEntity(data11, 10, big::DataTypes::HALF);
+                big.pushEntity(data1, big::DataTypes::UINT16_T);
+                big.pushEntity(data2, big::DataTypes::UINT8_T);
+                big.pushEntity(data3, big::DataTypes::UINT32_T);
+                big.pushEntity(data4, big::DataTypes::UINT64_T);
+                big.pushEntity(data5, big::DataTypes::INT8_T);
+                big.pushEntity(data6, big::DataTypes::INT16_T);
+                big.pushEntity(data7, big::DataTypes::INT32_T);
+                big.pushEntity(data8, big::DataTypes::INT64_T);
+                big.pushEntity(data9, big::DataTypes::FLOAT);
+                big.pushEntity(data10, big::DataTypes::DOUBLE);
+                big.pushEntity(data11, big::DataTypes::HALF);
             }
             big::BigCoreRead big("testCoreRead_DiffrentDataTypes1.big", false, 0);
             Assert::AreEqual(2ull, big.getNumberOfImages());
@@ -930,15 +929,24 @@ namespace big_test
             for (uint64_t i = 0; i != dataOrder.size(); ++i) {
                 Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
             }
+			std::vector<big::DataTypes> testDataType{ big::DataTypes::UINT16_T, big::DataTypes::UINT8_T, big::DataTypes::UINT32_T, big::DataTypes::UINT64_T, big::DataTypes::INT8_T,  big::DataTypes::INT16_T, big::DataTypes::INT32_T, big::DataTypes::INT64_T, big::DataTypes::FLOAT, big::DataTypes::DOUBLE, big::DataTypes::HALF };
             const auto &dataType = big.getDataType();
             for (uint64_t i = 0; i != dataType.size(); ++i) {
-                Assert::AreEqual(big::defaultDataType[0], dataType[i]);
+                Assert::AreEqual(testDataType[0], dataType[i]);
             }
 
-            uint64_t index = 0;
-            for (uint64_t imageNum = 0; imageNum != 11; ++imageNum) {
-                checkAtandGet(big, data[imageNum], imageNum, 2, 3, 5, n);
-        }*/
+			checkAtandGet(big, data1, 0, 2, 3, 5, n);
+			checkAtandGet(big, data2, 1, 2, 3, 5, n);
+			checkAtandGet(big, data3, 2, 2, 3, 5, n);
+			checkAtandGet(big, data4, 3, 2, 3, 5, n);
+			checkAtandGet(big, data5, 4, 2, 3, 5, n);
+			checkAtandGet(big, data6, 5, 2, 3, 5, n);
+			checkAtandGet(big, data7, 6, 2, 3, 5, n);
+			checkAtandGet(big, data8, 7, 2, 3, 5, n);
+			checkAtandGet(big, data9, 8, 2, 3, 5, n);
+			checkAtandGet(big, data10, 9, 2, 3, 5, n);
+			checkAtandGet(big, data11, 10, 2, 3, 5, n);
+        }
 
     };
 }

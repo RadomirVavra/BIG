@@ -31,7 +31,7 @@ namespace big_test
 					T d = big.at<T>(imageNum, rowIndex, colIndex, planeIndex);
 					Assert::AreEqual(data.get()[index], d);
 					d = big.get<T>(imageNum, rowIndex, colIndex, planeIndex);
-					//Assert::AreEqual(data.get()[index % n], d);
+					Assert::AreEqual(data.get()[index % n], d);
 					++index;
 				}
 			}
@@ -39,6 +39,16 @@ namespace big_test
 	}
 
 	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint8_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint16_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint32_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint64_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int8_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int16_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int32_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int64_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<float> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<double> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<half> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
     
 	template <typename T>
     void checkData(std::ifstream &file, std::shared_ptr<T> data, uint64_t n, uint64_t index, uint64_t dataType)

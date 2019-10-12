@@ -150,13 +150,12 @@ namespace big_test
 
 	template<> half convert(uint8_t value) { return half_cast<half>(value) / 255.0_h; }
 	template<> half convert(uint16_t value) { return half_cast<half>(value) / 65535.0_h;; }
-	template<> half convert(uint32_t value) { return half_cast<half>(value >>16) / 65535.0_h; }
-	template<> half convert(uint64_t value) { return half_cast<half>(value >> 48) / 65535.0_h;}
+	template<> half convert(uint32_t value) { return half_cast<half>(value >>17) / 32768.0_h; }
+	template<> half convert(uint64_t value) { return half_cast<half>(value >> 49) / 32768.0_h;}
 	template<> half convert(int8_t value) { return value == -128 ? (half_cast<half>(value) / 127.0_h) - 1.0_h : half_cast<half>(value) / 127.0_h; }
-	//TO DO conversions and tests
-	template<> half convert(int16_t value) { return half_cast<half>(value) / 32767.0_h; }
-	template<> half convert(int32_t value) { return half_cast<half>(value) / 2147483647.0_h; }
-	template<> half convert(int64_t value) { return half_cast<half>(value) / half_cast<half>(0x7FFFFFFFFFFFFFFF); }
+	template<> half convert(int16_t value) { return value == -32768 ? (half_cast<half>(value) / 32767.0_h) - 1.0_h :  half_cast<half>(value) / 32767.0_h; }
+	template<> half convert(int32_t value) { return value == 2147483647 ? 1.0_h : half_cast<half>(value>>16) / 32768.0_h; }
+	template<> half convert(int64_t value) { return value == 0x7FFFFFFFFFFFFFFF ? 1.0_h : half_cast<half>(value>>48) / 32768.0_h; }
 	template<> half convert(half value) { return value; }
 	template<> half convert(float value) { return half_cast<half>(value); }
 	template<> half convert(double value) { return half_cast<half>(value); }
@@ -1203,15 +1202,7 @@ namespace big_test
 
 		TEST_METHOD(BigConversionTest_half)
 		{
-			// double
-			{
-				std::vector<half> val = { 2.0_h, 1.0_h, 0.99_h, 0.1_h, 0.0_h, -0.1_h, -0.99_h, -1.0_h, -2.0_h };
-				std::vector<double> exp = { 2.0, 1.0, static_cast<double>(0.99_h), static_cast<double>(0.1_h), 0.0, static_cast<double>(-0.1_h), static_cast<double>(-0.99_h), -1.0, -2.0 };
-				for (int i = 0; i != exp.size(); ++i) {
-					half w1 = convert<half, double>(val[i]);
-					Assert::AreEqual(val[i], w1);
-				}
-			}
+			
 			// uint8_t
 			{
 				std::vector<uint8_t> val = { 255, 128, 127, 64, 63, 2, 1, 0 };
@@ -1254,7 +1245,7 @@ namespace big_test
 					half w1 = convert<half, uint64_t>(val[i]);
 					double deviation = exp[i] - w1;
 					bool isSame;
-					(abs(deviation) < 0.001) ? isSame = true : isSame = false;
+					(abs(deviation) < 0.001) ? isSame = true : isSame = false; // deviaton only in 3 cases and is about 0,0004 or 0,0002
 					Assert::AreEqual(isSame, true);
 				}
 			}
@@ -1267,66 +1258,75 @@ namespace big_test
 					Assert::AreEqual(exp[i], w1);
 				}
 			}
-			//// int16_t
-			//{
-			//	std::vector<int16_t> val = { 32767, 16384, 16383, 1, 0, -1, -16128, -16129, -16383, -16384, -32767, -32768 };
-			//	std::vector<double> exp = { 1.0, 16384 / 32767.0, 16383 / 32767.0, 1 / 32767.0, 0, -1 / 32767.0, -16128 / 32767.0, -16129 / 32767.0, -16383 / 32767.0, -16384 / 32767.0, -1.0, -32768 / 32767.0 };
-			//	for (int i = 0; i != val.size(); ++i) {
-			//		double w1 = convert<double, int16_t>(val[i]);
-			//		Assert::AreEqual(exp[i], w1);
-			//	}
-			//}
-			//// int32_t
-			//{
-			//	std::vector<int32_t> val = { 2147483647, 0x40000000, 0x3FFFFFFF, 1, 0, -1, -65536, -65537, -2147483647, -2147483648ll };
-			//	std::vector<double> exp = { 1.0, 0x40000000 / 2147483647.0, 0x3FFFFFFF / 2147483647.0, 1 / 2147483647.0, 0, -1 / 2147483647.0, -65536 / 2147483647.0, -65537 / 2147483647.0, -1.0, -2147483648ll / 2147483647.0 };
-			//	for (int i = 0; i != val.size(); ++i) {
-			//		double w1 = convert<double, int32_t>(val[i]);
-			//		Assert::AreEqual(exp[i], w1);
-			//	}
-			//}
-			//// int64_t
-			//{
-			//	std::vector<int64_t> val = { 0x7FFFFFFFFFFFFFFF, 0x4000000000000000, 0x3FFFFFFFFFFFFFFF, 1, 0, -1, -4294967296ll, -4294967297ll, static_cast<int64_t>(0x8000000000000000ull) };
-			//	std::vector<double> exp = { 1.0, 0x4000000000000000 / static_cast<double>(0x7FFFFFFFFFFFFFFF), 0x3FFFFFFFFFFFFFFF / static_cast<double>(0x7FFFFFFFFFFFFFFF), 1 / static_cast<double>(0x7FFFFFFFFFFFFFFF), 0, -1 / static_cast<double>(0x7FFFFFFFFFFFFFFF), -4294967296ll / static_cast<double>(0x7FFFFFFFFFFFFFFF), -4294967297ll / static_cast<double>(0x7FFFFFFFFFFFFFFF), -1.0 };
-			//	for (int i = 0; i != val.size(); ++i) {
-			//		double w1 = convert<double, int64_t>(val[i]);
-			//		Assert::AreEqual(exp[i], w1);
-			//	}
-			//}
-			//// half
-			//{
-			//	std::vector<half> val = { 2.0_h, 1.0_h, 0.99_h, 0.1_h, 0.0_h, -0.1_h, -0.99_h, -1.0_h, -2.0_h };
-			//	std::vector<double> exp = { 2.0, 1.0, static_cast<double>(0.99_h), static_cast<double>(0.1_h), 0.0, static_cast<double>(-0.1_h), static_cast<double>(-0.99_h), -1.0, -2.0 };
-			//	for (int i = 0; i != val.size(); ++i) {
-			//		double w1 = convert<double, half>(val[i]);
-			//		Assert::AreEqual(exp[i], w1);
-			//	}
-			//}
-			//// float 
-			//{
-			//	std::vector<float> val = { 2.0f, 1.0f, 0.99999999f, 0.99f, 0.1f, 0, -0.1f, -0.99f, -1.0f, -2.0f };
-			//	std::vector<double> exp = { 2.0, 1.0, 0.99999999, 0.99, 0.1, 0, -0.1, -0.99, -1.0, -2.0 };
-			//	for (int i = 0; i != val.size(); ++i) {
-			//		double w1 = convert<double, float>(val[i]);
-			//		double deviation = exp[i] - w1;
-			//		bool isSame;
-			//		(abs(deviation) < 0.0000001) ? isSame = true : isSame = false;
+			// int16_t
+			{
+				std::vector<int16_t> val = { 32767, 16384, 16383, 1, 0, -1, -16128, -16129, -16383, -16384, -32767, -32768 };
+				std::vector<half> exp = { 1.0_h, half_cast<half>(16384 / 32767.0), half_cast<half>(16383 / 32767.0), half_cast<half>(1 / 32767.0), 0.0_h, half_cast<half>(-1 / 32767.0), half_cast<half>(-16128 / 32767.0), half_cast<half>(-16129 / 32767.0), half_cast<half>(-16383 / 32767.0), half_cast<half>(-16384 / 32767.0), -1.0_h, half_cast<half>(-32768 / 32767.0) };
+				for (int i = 0; i != val.size(); ++i) {
+					half w1 = convert<half, int16_t>(val[i]);
+					double deviation = exp[i] - w1;
+					bool isSame;
+					(abs(deviation) < 0.001) ? isSame = true : isSame = false; // deviaton only in 2 cases and is about 0,0004 
+					Assert::AreEqual(isSame, true);
+				}
+			}
+			// int32_t
+			{
+				std::vector<int32_t> val = { 2147483647, 0x40000000, 0x3FFFFFFF, 1, 0, -1, -65536, -65537, -2147483647, -2147483648ll };
+				std::vector<half> exp = { 1.0_h, half_cast<half>(0x40000000 / 2147483647.0), half_cast<half>(0x3FFFFFFF / 2147483647.0), half_cast<half>(1 / 2147483647.0), 0.0_h, half_cast<half>(-1 / 2147483647.0), half_cast<half>(-65536 / 2147483647.0), half_cast<half>(-65537 / 2147483647.0), -1.0_h, half_cast<half>(-2147483648ll / 2147483647.0) };
+				for (int i = 0; i != val.size(); ++i) {
+					half w1 = convert<half, int32_t>(val[i]);
+					double deviation = exp[i] - w1;
+					bool isSame;
+					(abs(deviation) < 0.0001) ? isSame = true : isSame = false; // deviaton only in 2 cases and is about two 0.00005
+					Assert::AreEqual(isSame, true);
+				}
+			}
+			// int64_t
+			{
+				std::vector<int64_t> val = { 0x7FFFFFFFFFFFFFFF, 0x4000000000000000, 0x3FFFFFFFFFFFFFFF, 1, 0, -1, -4294967296ll, -4294967297ll, static_cast<int64_t>(0x8000000000000000ull) };
+				std::vector<half> exp = { 1.0_h,  half_cast<half>(0x4000000000000000 / static_cast<double>(0x7FFFFFFFFFFFFFFF)),  half_cast<half>(0x3FFFFFFFFFFFFFFF / static_cast<double>(0x7FFFFFFFFFFFFFFF)),  half_cast<half>(1 / static_cast<double>(0x7FFFFFFFFFFFFFFF)), 0.0_h,  half_cast<half>(-1 / static_cast<double>(0x7FFFFFFFFFFFFFFF)),  half_cast<half>(-4294967296ll / static_cast<double>(0x7FFFFFFFFFFFFFFF)),  half_cast<half>(-4294967297ll / static_cast<double>(0x7FFFFFFFFFFFFFFF)), -1.0_h };
+				for (int i = 0; i != val.size(); ++i) {
+					half w1 = convert<half, int64_t>(val[i]);
+					double deviation = exp[i] - w1;
+					bool isSame;
+					(abs(deviation) < 0.001) ? isSame = true : isSame = false; // deviaton only in 4 cases and is one 0,0002 and  three 0.00005
+					Assert::AreEqual(isSame, true);
+				}
+			}
+			// half
+			{
+				std::vector<half> val = { 2.0_h, 1.0_h, 0.99_h, 0.1_h, 0.0_h, -0.1_h, -0.99_h, -1.0_h, -2.0_h };
+				std::vector<half> exp = { 2.0_h, 1.0_h, 0.99_h, 0.1_h, 0.0_h, -0.1_h, -0.99_h, -1.0_h, -2.0_h };
+				for (int i = 0; i != val.size(); ++i) {
+					half w1 = convert<half, half>(val[i]);
+					Assert::AreEqual(exp[i], w1);
+				}
+			}
 
+			// float 
+			{
+				std::vector<float> val = { 2.0f, 1.0f, static_cast<float>(0.99_h), static_cast<float>(0.1_h), 0, static_cast<float>(-0.1_h), static_cast<float>(-0.99_h), -1.0f, -2.0f };
+				std::vector<half> exp = { 2.0_h, 1.0_h, 0.99_h, 0.1_h, 0.0_h, -0.1_h, -0.99_h, -1.0_h, -2.0_h };
+				for (int i = 0; i != val.size(); ++i) {
+					half w1 = convert<half, float>(val[i]);
+					Assert::AreEqual(exp[i], w1);
+				}
+			}
 
-
-			//		Assert::AreEqual(isSame, true);
-			//	}
-			//}
-			//// double
-			//{
-			//	std::vector<double> val = { 2.0, 1.0, 0.9999999999, 0.99, 0.1, 0, -0.1, -0.99, -1.0, -2.0 };
-			//	std::vector<double> exp = { 2.0, 1.0, 0.9999999999, 0.99, 0.1, 0, -0.1, -0.99, -1.0, -2.0 };
-			//	for (int i = 0; i != val.size(); ++i) {
-			//		double w1 = convert<double, double>(val[i]);
-			//		Assert::AreEqual(exp[i], w1);
-			//	}
-			//}
+			// double
+			{
+				std::vector<half> val = { 2.0_h, 1.0_h, 0.99_h, 0.1_h, 0.0_h, -0.1_h, -0.99_h, -1.0_h, -2.0_h };
+				std::vector<double> exp = { 2.0, 1.0, static_cast<double>(0.99_h), static_cast<double>(0.1_h), 0.0, static_cast<double>(-0.1_h), static_cast<double>(-0.99_h), -1.0, -2.0 };
+				for (int i = 0; i != exp.size(); ++i) {
+					half w1 = convert<half, double>(val[i]);
+					Assert::AreEqual(val[i], w1);
+				}
+			}
+		
+		
+			
+		
 		}
     };
 }

@@ -2,6 +2,9 @@
 
 namespace big
 {
+	using half_float::half;
+	using half_float::half_cast;
+	using namespace half_float::literal;
     BigCoreRead::BigCoreRead(const std::string& fileName, bool loadToCache, uint64_t cacheSizeBytes)
         : BigCoreReadInfo(fileName), cache(file, entitySizes, dataPositions, entityDataTypes)
     {
@@ -26,15 +29,15 @@ namespace big
 
     template uint8_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
     template uint16_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template uint32_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template uint64_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int8_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int16_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int32_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int64_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    ////template half BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template float BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template double BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template uint32_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template uint64_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int8_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int16_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int32_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int64_t BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template half BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template float BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template double BigCoreRead::get(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
 
     template<typename T>
     T BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane)
@@ -56,15 +59,15 @@ namespace big
 
     template uint8_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
     template uint16_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template uint32_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template uint64_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int8_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int16_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int32_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template int64_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    ////template half BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template float BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
-    //template double BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template uint32_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template uint64_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int8_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int16_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int32_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template int64_t BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template half BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template float BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
+    template double BigCoreRead::at(uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane);
 
     std::shared_ptr<const char> BigCoreRead::operator[](uint64_t index)
     {
