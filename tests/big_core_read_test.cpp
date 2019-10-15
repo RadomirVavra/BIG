@@ -921,10 +921,10 @@ namespace big_test
                 big.pushEntity(data11, big::DataTypes::HALF);
             }
             big::BigCoreRead big("testCoreRead_DiffrentDataTypes1.big", false, 0);
-            Assert::AreEqual(2ull, big.getNumberOfImages());
-            Assert::AreEqual(3ull, big.getImageHeight());
-            Assert::AreEqual(5ull, big.getImageWidth());
-            Assert::AreEqual(3ull, big.getNumberOfPlanes());
+            Assert::AreEqual(11ull, big.getNumberOfImages());
+            Assert::AreEqual(2ull, big.getImageHeight());
+            Assert::AreEqual(3ull, big.getImageWidth());
+            Assert::AreEqual(5ull, big.getNumberOfPlanes());
             const auto &dataOrder = big.getDataOrder();
             for (uint64_t i = 0; i != dataOrder.size(); ++i) {
                 Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
@@ -932,7 +932,7 @@ namespace big_test
 			std::vector<big::DataTypes> testDataType{ big::DataTypes::UINT16_T, big::DataTypes::UINT8_T, big::DataTypes::UINT32_T, big::DataTypes::UINT64_T, big::DataTypes::INT8_T,  big::DataTypes::INT16_T, big::DataTypes::INT32_T, big::DataTypes::INT64_T, big::DataTypes::FLOAT, big::DataTypes::DOUBLE, big::DataTypes::HALF };
             const auto &dataType = big.getDataType();
             for (uint64_t i = 0; i != dataType.size(); ++i) {
-                Assert::AreEqual(testDataType[0], dataType[i]);
+                Assert::AreEqual(testDataType[i], dataType[i]);
             }
 
 			checkAtandGet(big, data1, 0, 2, 3, 5, n);
