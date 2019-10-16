@@ -2,9 +2,9 @@
 
 namespace big
 {
-	using half_float::half;
-	using half_float::half_cast;
-	using namespace half_float::literal;
+    using half_float::half;
+    using half_float::half_cast;
+    using namespace half_float::literal;
     BigCoreRead::BigCoreRead(const std::string& fileName, bool loadToCache, uint64_t cacheSizeBytes)
         : BigCoreReadInfo(fileName), cache(file, entitySizes, dataPositions, entityDataTypes)
     {

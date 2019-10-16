@@ -65,7 +65,7 @@ namespace big
         if (dimensions.size() == 0) return 0;
         return dimensions[0];
     }
-	
+    
 
     void BigCoreBase::initSupportingStructures()
     {
@@ -177,17 +177,17 @@ namespace big
     {
         dataPositions.resize(dimensions[0], 0);
     }
-	void BigCoreBase::setEntitySizes(DataTypes dataType)
-	{
-		entityDataTypes.resize(numberOfImages, dataType);
-		entityTypeSizes.push_back(typeSizes[static_cast<uint64_t>(dataType)]);
-		uint64_t n = dimensions.size();
-		subSizes.resize(n);
-		subSizes[n - 1] = 1;
-		for (uint64_t i = n - 1; i != 0; --i) {
-			subSizes[i - 1] = subSizes[i] * dimensions[i];
-		}
-		entitySizes.push_back(typeSizes[static_cast<uint64_t>(dataType)] * subSizes[0]);
+    void BigCoreBase::setEntitySizes(DataTypes dataType)
+    {
+        entityDataTypes.resize(numberOfImages, dataType);
+        entityTypeSizes.push_back(typeSizes[static_cast<uint64_t>(dataType)]);
+        uint64_t n = dimensions.size();
+        subSizes.resize(n);
+        subSizes[n - 1] = 1;
+        for (uint64_t i = n - 1; i != 0; --i) {
+            subSizes[i - 1] = subSizes[i] * dimensions[i];
+        }
+        entitySizes.push_back(typeSizes[static_cast<uint64_t>(dataType)] * subSizes[0]);
 
-	}
+    }
 }

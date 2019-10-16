@@ -76,30 +76,30 @@ namespace big_test
                     writeMetaData(file, metaData);
                 }
                 {    
-					//catch exception, which is throw if dataorder is not correct
-					try
-					{
+                    //catch exception, which is throw if dataorder is not correct
+                    try
+                    {
 
 
-						big::BigCoreReadInfo big("testCoreReadInfo_Constructor3.big");
-						Assert::AreEqual(2ull, big.getNumberOfImages());
-						Assert::AreEqual(3ull, big.getImageHeight());
-						Assert::AreEqual(5ull, big.getImageWidth());
-						Assert::AreEqual(3ull, big.getNumberOfPlanes());
-						const auto &dataOrder2 = big.getDataOrder();
-						for (uint64_t i = 0; i != dataOrder2.size(); ++i) {
-							Assert::AreEqual(dataOrder[i], dataOrder2[i]);
-						}
-						const auto &dataType2 = big.getDataType();
-						for (uint64_t i = 0; i != dataType2.size(); ++i) {
-							Assert::AreEqual(dataType[i], dataType2[i]);
-						}
-					}
-					catch(const char * str)
-					{
-						Assert::AreEqual(str, "This data order is not supported!");
-					}
-					
+                        big::BigCoreReadInfo big("testCoreReadInfo_Constructor3.big");
+                        Assert::AreEqual(2ull, big.getNumberOfImages());
+                        Assert::AreEqual(3ull, big.getImageHeight());
+                        Assert::AreEqual(5ull, big.getImageWidth());
+                        Assert::AreEqual(3ull, big.getNumberOfPlanes());
+                        const auto &dataOrder2 = big.getDataOrder();
+                        for (uint64_t i = 0; i != dataOrder2.size(); ++i) {
+                            Assert::AreEqual(dataOrder[i], dataOrder2[i]);
+                        }
+                        const auto &dataType2 = big.getDataType();
+                        for (uint64_t i = 0; i != dataType2.size(); ++i) {
+                            Assert::AreEqual(dataType[i], dataType2[i]);
+                        }
+                    }
+                    catch(const char * str)
+                    {
+                        Assert::AreEqual(str, "This data order is not supported!");
+                    }
+                    
                 }
             }
         }

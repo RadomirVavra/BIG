@@ -78,8 +78,8 @@ namespace big
         // Returns total size of the data.
         uint64_t getSize() { return dataSize; }
 
-		//Set size of entity 
-		void setEntitySizes(DataTypes dataType);
+        //Set size of entity 
+        void setEntitySizes(DataTypes dataType);
 
 
     protected:
@@ -112,7 +112,7 @@ namespace big
         // Initialize positions of the data entities to zero.
         void initDataPositions();
 
-		
+        
     protected:
 
         uint64_t numberOfImages = 0;

@@ -129,17 +129,17 @@ namespace big
     template<> double BigCacheRead::convert(float value) { return static_cast<double>(value); }
     template<> double BigCacheRead::convert(double value) { return value; }
 
-	template<> half BigCacheRead::convert(uint8_t value) { return half_cast<half>(value) / 255.0_h; }
-	template<> half BigCacheRead::convert(uint16_t value) { return half_cast<half>(value) / 65535.0_h;; }
-	template<> half BigCacheRead::convert(uint32_t value) { return half_cast<half>(value >> 17) / 32768.0_h; }
-	template<> half BigCacheRead::convert(uint64_t value) { return half_cast<half>(value >> 49) / 32768.0_h; }
-	template<> half BigCacheRead::convert(int8_t value) { return value == -128 ? (half_cast<half>(value) / 127.0_h) - 1.0_h : half_cast<half>(value) / 127.0_h; }
-	template<> half BigCacheRead::convert(int16_t value) { return value == -32768 ? (half_cast<half>(value) / 32767.0_h) - 1.0_h : half_cast<half>(value) / 32767.0_h; }
-	template<> half BigCacheRead::convert(int32_t value) { return value == 2147483647 ? 1.0_h : half_cast<half>(value >> 16) / 32768.0_h; }
-	template<> half BigCacheRead::convert(int64_t value) { return value == 0x7FFFFFFFFFFFFFFF ? 1.0_h : half_cast<half>(value >> 48) / 32768.0_h; }
-	template<> half BigCacheRead::convert(half value) { return value; }
-	template<> half BigCacheRead::convert(float value) { return half_cast<half>(value); }
-	template<> half BigCacheRead::convert(double value) { return half_cast<half>(value); }
+    template<> half BigCacheRead::convert(uint8_t value) { return half_cast<half>(value / 255.0); }
+    template<> half BigCacheRead::convert(uint16_t value) { return half_cast<half>(value) / 65535.0_h;; }
+    template<> half BigCacheRead::convert(uint32_t value) { return half_cast<half>(value / 4294967295.0); }
+    template<> half BigCacheRead::convert(uint64_t value) { return half_cast<half>((value >> 11) / 9007199254740991.0); }
+    template<> half BigCacheRead::convert(int8_t value) { return value == -128 ? (half_cast<half>(value) / 127.0_h) - 1.0_h : half_cast<half>(value) / 127.0_h; }
+    template<> half BigCacheRead::convert(int16_t value) { return  half_cast<half>(value / 32767.0); }
+    template<> half BigCacheRead::convert(int32_t value) { return  half_cast<half>(value / 2147483647.0); }
+    template<> half BigCacheRead::convert(int64_t value) { return  half_cast<half>(value / static_cast<double>(0x7FFFFFFFFFFFFFFF)); }
+    template<> half BigCacheRead::convert(half value) { return value; }
+    template<> half BigCacheRead::convert(float value) { return half_cast<half>(value); }
+    template<> half BigCacheRead::convert(double value) { return half_cast<half>(value); }
 
 
 
@@ -275,13 +275,13 @@ namespace big
 
     template uint8_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
     template uint16_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template uint32_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template uint64_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template int8_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template int16_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template int32_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template int64_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template float BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template double BigCacheRead::getElement(uint64_t entityID, uint64_t index);
-	template half BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template uint32_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template uint64_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template int8_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template int16_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template int32_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template int64_t BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template float BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template double BigCacheRead::getElement(uint64_t entityID, uint64_t index);
+    template half BigCacheRead::getElement(uint64_t entityID, uint64_t index);
 }

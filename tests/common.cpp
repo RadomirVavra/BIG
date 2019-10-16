@@ -4,8 +4,8 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace big_test
 {
-	using half_float::half;
-	using half_float::half_cast;
+    using half_float::half;
+    using half_float::half_cast;
     void checkHeader(std::ifstream &file)
     {
         std::string header(big::CHUNK_LENGTH, ' ');
@@ -21,36 +21,36 @@ namespace big_test
             Assert::AreEqual(d, number);
         }
     }
-	template<typename T>
-	void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<T> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n)
-	{
-		uint64_t index = 0;
-		for (uint64_t rowIndex = 0; rowIndex != row; ++rowIndex) {
-			for (uint64_t colIndex = 0; colIndex != col; ++colIndex) {
-				for (uint64_t planeIndex = 0; planeIndex != plane; ++planeIndex) {
-					T d = big.at<T>(imageNum, rowIndex, colIndex, planeIndex);
-					Assert::AreEqual(data.get()[index], d);
-					d = big.get<T>(imageNum, rowIndex, colIndex, planeIndex);
-					Assert::AreEqual(data.get()[index % n], d);
-					++index;
-				}
-			}
-		}
-	}
+    template<typename T>
+    void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<T> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n)
+    {
+        uint64_t index = 0;
+        for (uint64_t rowIndex = 0; rowIndex != row; ++rowIndex) {
+            for (uint64_t colIndex = 0; colIndex != col; ++colIndex) {
+                for (uint64_t planeIndex = 0; planeIndex != plane; ++planeIndex) {
+                    T d = big.at<T>(imageNum, rowIndex, colIndex, planeIndex);
+                    Assert::AreEqual(data.get()[index], d);
+                    d = big.get<T>(imageNum, rowIndex, colIndex, planeIndex);
+                    Assert::AreEqual(data.get()[index % n], d);
+                    ++index;
+                }
+            }
+        }
+    }
 
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint8_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint16_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint32_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint64_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int8_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int16_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int32_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int64_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<float> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<double> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
-	template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<half> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint8_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint16_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint32_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<uint64_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int8_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int16_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int32_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<int64_t> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<float> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<double> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
+    template void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<half> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n);
     
-	template <typename T>
+    template <typename T>
     void checkData(std::ifstream &file, std::shared_ptr<T> data, uint64_t n, uint64_t index, uint64_t dataType)
     {
         uint64_t number;
@@ -62,8 +62,8 @@ namespace big_test
         Assert::AreEqual(length, number);
         file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
         Assert::AreEqual(index, number);
-		file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
-		Assert::AreEqual(dataType, number);
+        file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
+        Assert::AreEqual(dataType, number);
         for (uint64_t i = 0; i != n; ++i) {
             T number;
             file.read(reinterpret_cast<char*>(&number), sizeof(T));
