@@ -176,14 +176,14 @@ namespace big
                     }
                     return vec;
                 }
-               /* case DataTypes::HALF:
+               case DataTypes::HALF:
                 {
                     vec.reserve(entitySizes[index] / 2);
                     for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
                         vec.push_back(convert<T, half>(reinterpret_cast<half*>(data.get())[i]));
                     }
                     return vec;
-                }*/
+                }
                 case DataTypes::FLOAT:
                 {
                     vec.reserve(entitySizes[index] / 2);

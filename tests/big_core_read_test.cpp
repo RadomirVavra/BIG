@@ -729,11 +729,7 @@ namespace big_test
                 std::shared_ptr<uint8_t> data{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (int i = 0; i != n; ++i) data.get()[i] = i;
                 {
-                    //std::ofstream file("testCoreRead_GetImage1.big", std::ios_base::binary | std::ios_base::out);
-                    //writeHeader(file);
-                    //std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4}; //, 6, 8, 1 
-                    //writeMetaData(file, metaData);
-                    //writeData(file, data, n, 0);
+                    
                     big::BigCoreWrite big("testCoreRead_GetImage1.big", 2, 4, 1); // default data order
                     big.addEntity(data, 0, big::DataTypes::UINT8_T);
                 }
@@ -759,12 +755,7 @@ namespace big_test
                 std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
                 for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
                 {
-                    //std::ofstream file("testCoreRead_GetImage2.big", std::ios_base::binary | std::ios_base::out);
-                    //writeHeader(file);
-                    //std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1
-                    //writeMetaData(file, metaData);
-                    //writeData(file, data1, n, 0);
-                    //writeData(file, data2, n, 1);
+                 
                     big::BigCoreWrite big("testCoreRead_GetImage2.big", 3, 5, 3); // default data order
                     big.addEntity(data1, 0, big::DataTypes::UINT8_T);
                     big.addEntity(data2, 1, big::DataTypes::UINT8_T);
@@ -880,7 +871,7 @@ namespace big_test
                 }
             }
         }
-        TEST_METHOD(BigCoreRead_diffrentDataTypes) //to do
+        TEST_METHOD(BigCoreRead_diffrentDataTypes) 
         {
             
             uint16_t n = 5 * 3 * 2;
@@ -946,6 +937,76 @@ namespace big_test
             checkAtandGet(big, data9, 8, 2, 3, 5, n);
             checkAtandGet(big, data10, 9, 2, 3, 5, n);
             checkAtandGet(big, data11, 10, 2, 3, 5, n);
+        }
+        TEST_METHOD(BigCoreRead_GetImage_diffrentDatatypes) //to do for all types
+        {
+            uint16_t n = 5 * 3 * 2;
+            std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
+            for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
+            std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
+            for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
+            std::shared_ptr<uint32_t> data3{ new uint32_t[n], [](uint32_t *p) {delete[] p; } };
+            for (uint32_t i = 0; i != n; ++i) data3.get()[i] = 2 * static_cast<uint32_t>(n) + i;
+            std::shared_ptr<uint64_t> data4{ new uint64_t[n], [](uint64_t *p) {delete[] p; } };
+            for (uint64_t i = 0; i != n; ++i) data4.get()[i] = 2 * static_cast<uint64_t>(n) + i;
+            std::shared_ptr<int8_t> data5{ new int8_t[n], [](int8_t *p) {delete[] p; } };
+            for (int8_t i = 0; i != n; ++i) data5.get()[i] = 2 * static_cast<int8_t>(n) + i;
+            std::shared_ptr<int16_t> data6{ new int16_t[n], [](int16_t *p) {delete[] p; } };
+            for (int16_t i = 0; i != n; ++i) data6.get()[i] = 2 * static_cast<int16_t>(n) + i;
+            std::shared_ptr<int32_t> data7{ new int32_t[n], [](int32_t *p) {delete[] p; } };
+            for (int32_t i = 0; i != n; ++i) data7.get()[i] = 2 * static_cast<int32_t>(n) + i;
+            std::shared_ptr<int64_t> data8{ new int64_t[n], [](int64_t *p) {delete[] p; } };
+            for (int64_t i = 0; i != n; ++i) data8.get()[i] = 2 * static_cast<int64_t>(n) + i;
+            std::shared_ptr<float> data9{ new float[n], [](float *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) data9.get()[i] = 2 * static_cast<float>(n) + i;
+            std::shared_ptr<double> data10{ new double[n], [](double *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) data10.get()[i] = 2 * static_cast<double>(n) + i;
+            std::shared_ptr<half> data11{ new half[n], [](half *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) data11.get()[i] = 2 * static_cast<half> (n) + i;
+            {
+                big::BigCoreWrite big("testCoreRead_getImage_DiffrentDataTypes1.big", 2, 3, 5);
+                big.pushEntity(data1, big::DataTypes::UINT16_T);
+                big.pushEntity(data2, big::DataTypes::UINT8_T);
+                big.pushEntity(data3, big::DataTypes::UINT32_T);
+                big.pushEntity(data4, big::DataTypes::UINT64_T);
+                big.pushEntity(data5, big::DataTypes::INT8_T);
+                big.pushEntity(data6, big::DataTypes::INT16_T);
+                big.pushEntity(data7, big::DataTypes::INT32_T);
+                big.pushEntity(data8, big::DataTypes::INT64_T);
+                big.pushEntity(data9, big::DataTypes::FLOAT);
+                big.pushEntity(data10, big::DataTypes::DOUBLE);
+                big.pushEntity(data11, big::DataTypes::HALF);
+            }
+            big::BigCoreRead big("testCoreRead_getImage_DiffrentDataTypes1.big", false, 0);
+            Assert::AreEqual(11ull, big.getNumberOfImages());
+            Assert::AreEqual(2ull, big.getImageHeight());
+            Assert::AreEqual(3ull, big.getImageWidth());
+            Assert::AreEqual(5ull, big.getNumberOfPlanes());
+            const auto &dataOrder = big.getDataOrder();
+            for (uint64_t i = 0; i != dataOrder.size(); ++i) {
+                Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
+            }
+            std::vector<big::DataTypes> testDataType{ big::DataTypes::UINT16_T, big::DataTypes::UINT8_T, big::DataTypes::UINT32_T, big::DataTypes::UINT64_T, big::DataTypes::INT8_T,  big::DataTypes::INT16_T, big::DataTypes::INT32_T, big::DataTypes::INT64_T, big::DataTypes::FLOAT, big::DataTypes::DOUBLE, big::DataTypes::HALF };
+            const auto &dataType = big.getDataType();
+            for (uint64_t i = 0; i != dataType.size(); ++i) {
+                Assert::AreEqual(testDataType[i], dataType[i]);
+            }
+            {
+                big::BigCoreRead big("testCoreRead_getImage_DiffrentDataTypes1.big");
+                auto vec = big.getImage<uint16_t>(0);
+                for (uint64_t index = 0; index != vec.size(); ++index) {
+                    Assert::AreEqual(data1.get()[index], vec[index]);
+                }
+            }
+            {
+                big::BigCoreRead big("testCoreRead_getImage_DiffrentDataTypes1.big", false, 0);
+                auto vec = big.getImage<uint16_t>(0);
+                for (uint64_t index = 0; index != vec.size(); ++index) {
+                    Assert::AreEqual(data1.get()[index], vec[index]);
+                }
+            }
+
+
         }
 
     };
