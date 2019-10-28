@@ -88,15 +88,15 @@ namespace big
 
     template std::vector<uint8_t> BigCoreRead::getEntity(uint64_t index);
     template std::vector<uint16_t> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<uint32_t> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<uint64_t> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<int8_t> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<int16_t> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<int32_t> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<int64_t> BigCoreRead::getEntity(uint64_t index);
-    ////template std::vector<half> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<float> BigCoreRead::getEntity(uint64_t index);
-    //template std::vector<double> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<uint32_t> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<uint64_t> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<int8_t> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<int16_t> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<int32_t> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<int64_t> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<half> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<float> BigCoreRead::getEntity(uint64_t index);
+    template std::vector<double> BigCoreRead::getEntity(uint64_t index);
 
     template<typename T>
     std::vector<T> BigCoreRead::getImage(uint64_t imageNum)
@@ -156,27 +156,30 @@ namespace big
             }
             return data;
         }
+		else {
 
-        std::array<uint64_t, 4> indices;
-        //indices[orderMap[static_cast<uint64_t>(ChunkIds::NUMBER_OF_IMAGES)]] = imageNum;
-        indices[numberOfImagesOrder] = imageNum;
-        uint64_t index = 0;
-        std::vector<T> data(imageHeight * imageWidth * numberOfPlanes);
-        for (uint64_t row = 0; row != imageHeight; ++row) {
-            //indices[orderMap[static_cast<uint64_t>(ChunkIds::IMAGE_HEIGHT)]] = row;
-            indices[imageHeightOrder] = row;
-            for (uint64_t col = 0; col != imageWidth; ++col) {
-                //indices[orderMap[static_cast<uint64_t>(ChunkIds::IMAGE_WIDTH)]] = col;
-                indices[imageWidthOrder] = col;
-                for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
-                    //indices[orderMap[static_cast<uint64_t>(ChunkIds::NUMBER_OF_PLANES)]] = plane;
-                    indices[numberOfPlanesOrder] = plane;
-                    uint64_t i = indices[1] * subSizes[1] + indices[2] * subSizes[2] + indices[3];
-                    data[index++] = cache.getElement<T>(indices[0], i);
-                }
-            }
-        }
-        return data;
+			std::array<uint64_t, 4> indices;
+			//indices[orderMap[static_cast<uint64_t>(ChunkIds::NUMBER_OF_IMAGES)]] = imageNum;
+			indices[numberOfImagesOrder] = imageNum;
+			uint64_t index = 0;
+			std::vector<T> data(imageHeight * imageWidth * numberOfPlanes);
+			for (uint64_t row = 0; row != imageHeight; ++row) {
+				//indices[orderMap[static_cast<uint64_t>(ChunkIds::IMAGE_HEIGHT)]] = row;
+				indices[imageHeightOrder] = row;
+				for (uint64_t col = 0; col != imageWidth; ++col) {
+					//indices[orderMap[static_cast<uint64_t>(ChunkIds::IMAGE_WIDTH)]] = col;
+					indices[imageWidthOrder] = col;
+					for (uint64_t plane = 0; plane != numberOfPlanes; ++plane) {
+						//indices[orderMap[static_cast<uint64_t>(ChunkIds::NUMBER_OF_PLANES)]] = plane;
+						indices[numberOfPlanesOrder] = plane;
+						uint64_t i = indices[1] * subSizes[1] + indices[2] * subSizes[2] + indices[3];
+						data[index++] = cache.getElement<T>(indices[0], i);
+					}
+				}
+			}
+			return data;
+		}
+	
 
     }
 

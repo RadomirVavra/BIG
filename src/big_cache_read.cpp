@@ -141,7 +141,204 @@ namespace big
     template<> half BigCacheRead::convert(float value) { return half_cast<half>(value); }
     template<> half BigCacheRead::convert(double value) { return half_cast<half>(value); }
 
+	void BigCacheRead::setSize(uint64_t maxSize) {
+		{ this->maxSize = maxSize; }
+	}
 
+	uint64_t BigCacheRead::getSize() { return currentSize; }
+
+	BigCacheRead::BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes)
+		: file(file), entitySizes(entitySizes), dataPositions(dataPositions), dataTypes(dataTypes)
+	{
+		entities.resize(entitySizes.size());
+	}
+	void BigCacheRead::load(std::ifstream &file)
+	{
+		uint64_t totalSize = 0;
+		for (const auto & entitySize : entitySizes) totalSize += entitySize;
+		if (totalSize <= maxSize) {
+			for (uint64_t index = 0; index != entities.size(); ++index) {
+				if (entities[index].data != nullptr) continue;
+				pull(index);
+			}
+		}
+	}
+	
+	void BigCacheRead::clear()
+	{
+		while (!lru_list.empty()) pop();
+	}
+
+	void BigCacheRead::shrink()
+	{
+		while (currentSize > maxSize) pop();
+	}
+
+	void BigCacheRead::pop() {
+		entities[lru_list.front()].data.reset();
+		currentSize -= entitySizes[lru_list.front()];
+		lru_list.pop_front();
+	}
+
+	void BigCacheRead::pull(uint64_t index) {
+		entities[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+		file.seekg(dataPositions[index]);
+		file.read(entities[index].data.get(), entitySizes[index]);
+		currentSize += entitySizes[index];
+		entities[index].it = lru_list.insert(lru_list.end(), index);
+	}
+	void BigCacheRead::insert(const uint64_t& index) {
+		while (currentSize + entitySizes[index] > maxSize) pop();
+		pull(index);
+	}
+
+	std::shared_ptr<const char>  BigCacheRead::operator[] (uint64_t index) {
+		Entity& entity = entities[index];
+		if (entity.data == nullptr) {
+			if (entitySizes[index] <= maxSize) insert(index);
+			else {
+				std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+				file.seekg(dataPositions[index]);
+				file.read(data.get(), entitySizes[index]);
+				return data;
+			}
+		}
+		else {
+			lru_list.splice(lru_list.end(), lru_list, entity.it);
+		}
+		return entity.data;
+	}
+
+	template<typename T>
+	std::vector<T> BigCacheRead::getEntity(uint64_t index) {
+		Entity& entity = entities[index];
+		std::shared_ptr<char> data = entity.data;
+		if (data == nullptr) {
+			if (entitySizes[index] <= maxSize) {
+				insert(index);
+				data = entity.data;
+			}
+			else {
+				data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+				file.seekg(dataPositions[index]);
+				file.read(data.get(), entitySizes[index]);
+			}
+		}
+		else {
+			lru_list.splice(lru_list.end(), lru_list, entity.it);
+		}
+
+		std::vector<T> vec;
+
+		switch (dataTypes[index])
+		{
+		case DataTypes::UINT8_T:
+		{
+			vec.reserve(entitySizes[index]);
+			for (uint64_t i = 0; i != entitySizes[index]; ++i) {
+				vec.push_back(convert<T, uint8_t>(reinterpret_cast<uint8_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::UINT16_T:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, uint16_t>(reinterpret_cast<uint16_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::UINT32_T:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, uint32_t>(reinterpret_cast<uint32_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::UINT64_T:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, uint64_t>(reinterpret_cast<uint64_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::INT8_T:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, int8_t>(reinterpret_cast<int8_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::INT16_T:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, int16_t>(reinterpret_cast<int16_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::INT32_T:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, int32_t>(reinterpret_cast<int32_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::INT64_T:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, int64_t>(reinterpret_cast<int64_t*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::HALF:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, half>(reinterpret_cast<half*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::FLOAT:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, float>(reinterpret_cast<float*>(data.get())[i]));
+			}
+			return vec;
+		}
+		case DataTypes::DOUBLE:
+		{
+			vec.reserve(entitySizes[index] / 2);
+			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+				vec.push_back(convert<T, double>(reinterpret_cast<double*>(data.get())[i]));
+			}
+			return vec;
+		}
+
+
+		}
+
+
+
+		return vec;
+	}
+	template std::vector<uint8_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<uint16_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<uint32_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<uint64_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<int8_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<int16_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<int32_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<int64_t> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<half> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<float> BigCacheRead::getEntity(uint64_t index);
+	template std::vector<double> BigCacheRead::getEntity(uint64_t index);
 
     template<typename T>
     T BigCacheRead::getElementFromFile(uint64_t entityID, uint64_t index)

@@ -7,6 +7,15 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace big_test
 {		
+	inline bool exists_test(const std::string& name) {
+		if (FILE *file = fopen(name.c_str(), "r")) {
+			fclose(file);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
     TEST_CLASS(BigCoreRead_UnitTest)
     {
     public:
@@ -938,7 +947,7 @@ namespace big_test
             checkAtandGet(big, data10, 9, 2, 3, 5, n);
             checkAtandGet(big, data11, 10, 2, 3, 5, n);
         }
-        TEST_METHOD(BigCoreRead_GetImage_diffrentDatatypes) //to do for all types
+        TEST_METHOD(BigCoreRead_GetImage_diffrentDatatypes) //test for all datatypes and with or without cache
         {
             uint16_t n = 5 * 3 * 2;
             std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
@@ -991,23 +1000,385 @@ namespace big_test
             for (uint64_t i = 0; i != dataType.size(); ++i) {
                 Assert::AreEqual(testDataType[i], dataType[i]);
             }
-            {
-                big::BigCoreRead big("testCoreRead_getImage_DiffrentDataTypes1.big");
-                auto vec = big.getImage<uint16_t>(0);
-                for (uint64_t index = 0; index != vec.size(); ++index) {
-                    Assert::AreEqual(data1.get()[index], vec[index]);
-                }
-            }
+            
             {
                 big::BigCoreRead big("testCoreRead_getImage_DiffrentDataTypes1.big", false, 0);
                 auto vec = big.getImage<uint16_t>(0);
                 for (uint64_t index = 0; index != vec.size(); ++index) {
                     Assert::AreEqual(data1.get()[index], vec[index]);
                 }
-            }
+            
+				auto vec2 = big.getImage<uint8_t>(1);
+				for (uint64_t index = 0; index != vec2.size(); ++index) {
+					Assert::AreEqual(data2.get()[index], vec2[index]);
+				}
+			
+				auto vec3 = big.getImage<uint32_t>(2);
+				for (uint64_t index = 0; index != vec3.size(); ++index) {
+					Assert::AreEqual(data3.get()[index], vec3[index]);
+				}
+				auto vec4 = big.getImage<uint64_t>(3);
+				for (uint64_t index = 0; index != vec4.size(); ++index) {
+					Assert::AreEqual(data4.get()[index], vec4[index]);
+				}
+				auto vec6 = big.getImage<int8_t>(4);
+				for (uint64_t index = 0; index != vec6.size(); ++index) {
+					Assert::AreEqual(data5.get()[index], vec6[index]);
+				}
+				auto vec7 = big.getImage<int16_t>(5);
+				for (uint64_t index = 0; index != vec7.size(); ++index) {
+					Assert::AreEqual(data6.get()[index], vec7[index]);
+				}
+				auto vec8 = big.getImage<int32_t>(6);
+				for (uint64_t index = 0; index != vec8.size(); ++index) {
+					Assert::AreEqual(data7.get()[index], vec8[index]);
+				}
+				auto vec9 = big.getImage<int64_t>(7);
+				for (uint64_t index = 0; index != vec9.size(); ++index) {
+					Assert::AreEqual(data8.get()[index], vec9[index]);
+				}
+				auto vec10 = big.getImage<float>(8);
+				for (uint64_t index = 0; index != vec10.size(); ++index) {
+					Assert::AreEqual(data9.get()[index], vec10[index]);
+				}
+				auto vec11 = big.getImage<double>(9);
+				for (uint64_t index = 0; index != vec11.size(); ++index) {
+					Assert::AreEqual(data10.get()[index], vec11[index]);
+				}
+				auto vec12 = big.getImage<half>(10);
+				for (uint64_t index = 0; index != vec12.size(); ++index) {
+					Assert::AreEqual(data11.get()[index], vec12[index]);
+				}
+			}
+			{
+				big::BigCoreRead big("testCoreRead_getImage_DiffrentDataTypes1.big", true);
+				auto vec = big.getImage<uint16_t>(0);
+				for (uint64_t index = 0; index != vec.size(); ++index) {
+					Assert::AreEqual(data1.get()[index], vec[index]);
+				}
 
+				auto vec2 = big.getImage<uint8_t>(1);
+				for (uint64_t index = 0; index != vec2.size(); ++index) {
+					Assert::AreEqual(data2.get()[index], vec2[index]);
+				}
+
+				auto vec3 = big.getImage<uint32_t>(2);
+				for (uint64_t index = 0; index != vec3.size(); ++index) {
+					Assert::AreEqual(data3.get()[index], vec3[index]);
+				}
+				auto vec4 = big.getImage<uint64_t>(3);
+				for (uint64_t index = 0; index != vec4.size(); ++index) {
+					Assert::AreEqual(data4.get()[index], vec4[index]);
+				}
+				auto vec6 = big.getImage<int8_t>(4);
+				for (uint64_t index = 0; index != vec6.size(); ++index) {
+					Assert::AreEqual(data5.get()[index], vec6[index]);
+				}
+				auto vec7 = big.getImage<int16_t>(5);
+				for (uint64_t index = 0; index != vec7.size(); ++index) {
+					Assert::AreEqual(data6.get()[index], vec7[index]);
+				}
+				auto vec8 = big.getImage<int32_t>(6);
+				for (uint64_t index = 0; index != vec8.size(); ++index) {
+					Assert::AreEqual(data7.get()[index], vec8[index]);
+				}
+				auto vec9 = big.getImage<int64_t>(7);
+				for (uint64_t index = 0; index != vec9.size(); ++index) {
+					Assert::AreEqual(data8.get()[index], vec9[index]);
+				}
+				auto vec10 = big.getImage<float>(8);
+				for (uint64_t index = 0; index != vec10.size(); ++index) {
+					Assert::AreEqual(data9.get()[index], vec10[index]);
+				}
+				auto vec11 = big.getImage<double>(9);
+				for (uint64_t index = 0; index != vec11.size(); ++index) {
+					Assert::AreEqual(data10.get()[index], vec11[index]);
+				}
+				auto vec12 = big.getImage<half>(10);
+				for (uint64_t index = 0; index != vec12.size(); ++index) {
+					Assert::AreEqual(data11.get()[index], vec12[index]);
+				}
+			}
 
         }
+		TEST_METHOD(BigCoreRead_GetImage_without_cache_time_test) { //39 sec // size 1500 èas 0:04:45,2582933,  600 prvkù dvakrát rychlejší 0:00:47,1344158
+			uint16_t n = 5 * 3 * 2;
+			uint64_t data_test_size =600; //if change this value delete test file or comment if for creating data
+			std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
+			for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
+			std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
+			for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
+			std::shared_ptr<uint32_t> data3{ new uint32_t[n], [](uint32_t *p) {delete[] p; } };
+			for (uint32_t i = 0; i != n; ++i) data3.get()[i] = 2 * static_cast<uint32_t>(n) + i;
+			std::shared_ptr<uint64_t> data4{ new uint64_t[n], [](uint64_t *p) {delete[] p; } };
+			for (uint64_t i = 0; i != n; ++i) data4.get()[i] = 2 * static_cast<uint64_t>(n) + i;
+			std::shared_ptr<int8_t> data5{ new int8_t[n], [](int8_t *p) {delete[] p; } };
+			for (int8_t i = 0; i != n; ++i) data5.get()[i] = 2 * static_cast<int8_t>(n) + i;
+			std::shared_ptr<int16_t> data6{ new int16_t[n], [](int16_t *p) {delete[] p; } };
+			for (int16_t i = 0; i != n; ++i) data6.get()[i] = 2 * static_cast<int16_t>(n) + i;
+			std::shared_ptr<int32_t> data7{ new int32_t[n], [](int32_t *p) {delete[] p; } };
+			for (int32_t i = 0; i != n; ++i) data7.get()[i] = 2 * static_cast<int32_t>(n) + i;
+			std::shared_ptr<int64_t> data8{ new int64_t[n], [](int64_t *p) {delete[] p; } };
+			for (int64_t i = 0; i != n; ++i) data8.get()[i] = 2 * static_cast<int64_t>(n) + i;
+			std::shared_ptr<float> data9{ new float[n], [](float *p) {delete[] p; } };
+			for (int i = 0; i != n; ++i) data9.get()[i] = 2 * static_cast<float>(n) + i;
+			std::shared_ptr<double> data10{ new double[n], [](double *p) {delete[] p; } };
+			for (int i = 0; i != n; ++i) data10.get()[i] = 2 * static_cast<double>(n) + i;
+			std::shared_ptr<half> data11{ new half[n], [](half *p) {delete[] p; } };
+			for (int i = 0; i != n; ++i) { data11.get()[i] = 2 * static_cast<half> (n) + i; }
+			uint64_t number_of_imadges = data_test_size*11;
+		    //if(!exists_test("testCoreRead_getImage_cache_test1.big"))
+			{
+				big::BigCoreWrite big("testCoreRead_getImage_cache_test1.big", 2, 3, 5);
+				uint64_t j = 0;
+				while(j  < data_test_size) {
+					big.pushEntity(data1, big::DataTypes::UINT16_T);
+					big.pushEntity(data2, big::DataTypes::UINT8_T);
+					big.pushEntity(data3, big::DataTypes::UINT32_T);
+					big.pushEntity(data4, big::DataTypes::UINT64_T);
+					big.pushEntity(data5, big::DataTypes::INT8_T);
+					big.pushEntity(data6, big::DataTypes::INT16_T);
+					big.pushEntity(data7, big::DataTypes::INT32_T);
+					big.pushEntity(data8, big::DataTypes::INT64_T);
+					big.pushEntity(data9, big::DataTypes::FLOAT);
+					big.pushEntity(data10, big::DataTypes::DOUBLE);
+					big.pushEntity(data11, big::DataTypes::HALF);
+					j++;
+				}
+			}
+			big::BigCoreRead big("testCoreRead_getImage_cache_test1.big", false, 0);
+			Assert::AreEqual(number_of_imadges, big.getNumberOfImages());
+			Assert::AreEqual(2ull, big.getImageHeight());
+			Assert::AreEqual(3ull, big.getImageWidth());
+			Assert::AreEqual(5ull, big.getNumberOfPlanes());
+			const auto &dataOrder = big.getDataOrder();
+			for (uint64_t i = 0; i != dataOrder.size(); ++i) {
+				Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
+			}
+			std::vector<big::DataTypes> testDataType{ big::DataTypes::UINT16_T, big::DataTypes::UINT8_T, big::DataTypes::UINT32_T, big::DataTypes::UINT64_T, big::DataTypes::INT8_T,  big::DataTypes::INT16_T, big::DataTypes::INT32_T, big::DataTypes::INT64_T, big::DataTypes::FLOAT, big::DataTypes::DOUBLE, big::DataTypes::HALF };
+			const auto &dataType = big.getDataType();
+			for (uint64_t i = 0; i != dataType.size(); ++i) {
+				Assert::AreEqual(testDataType[i%11], dataType[i]);
+			}
+			uint64_t i = 0;
+			while(i< 11* data_test_size)
+			{
+				big::BigCoreRead big("testCoreRead_getImage_cache_test1.big", false, 0);
+				auto vec = big.getImage<uint16_t>(i);
+				/*for (uint64_t index = 0; index != vec.size(); ++index) {
+					Assert::AreEqual(data1.get()[index], vec[index]);
+				}*/
+				i++;
+
+				auto vec2 = big.getImage<uint8_t>(i);
+				/*for (uint64_t index = 0; index != vec2.size(); ++index) {
+					Assert::AreEqual(data2.get()[index], vec2[index]);
+				}*/
+				i++;
+
+				auto vec3 = big.getImage<uint32_t>(i);
+				/*for (uint64_t index = 0; index != vec3.size(); ++index) {
+					Assert::AreEqual(data3.get()[index], vec3[index]);
+				}*/
+				i++;
+				auto vec4 = big.getImage<uint64_t>(i);
+				/*for (uint64_t index = 0; index != vec4.size(); ++index) {
+					Assert::AreEqual(data4.get()[index], vec4[index]);
+				}*/
+				i++;
+				auto vec6 = big.getImage<int8_t>(i);
+				/*for (uint64_t index = 0; index != vec6.size(); ++index) {
+					Assert::AreEqual(data5.get()[index], vec6[index]);
+				}*/
+				i++;
+				auto vec7 = big.getImage<int16_t>(i);
+				/*for (uint64_t index = 0; index != vec7.size(); ++index) {
+					Assert::AreEqual(data6.get()[index], vec7[index]);
+				}*/
+				i++;
+				auto vec8 = big.getImage<int32_t>(i);
+				/*for (uint64_t index = 0; index != vec8.size(); ++index) {
+					Assert::AreEqual(data7.get()[index], vec8[index]);
+				}*/
+				i++;
+				auto vec9 = big.getImage<int64_t>(i);
+				/*for (uint64_t index = 0; index != vec9.size(); ++index) {
+					Assert::AreEqual(data8.get()[index], vec9[index]);
+				}*/
+				i++;
+				auto vec10 = big.getImage<float>(i);
+				/*for (uint64_t index = 0; index != vec10.size(); ++index) {
+					Assert::AreEqual(data9.get()[index], vec10[index]);
+				}*/
+				i++;
+				auto vec11 = big.getImage<double>(i);
+				/*for (uint64_t index = 0; index != vec11.size(); ++index) {
+					Assert::AreEqual(data10.get()[index], vec11[index]);
+				}*/
+				i++;
+				auto vec12 = big.getImage<half>(i);
+				/*for (uint64_t index = 0; index != vec12.size(); ++index) {
+					Assert::AreEqual(data11.get()[index], vec12[index]);
+				}*/
+				i++;
+
+				auto vec13 = big.getImage<double>(9);
+				/*for (uint64_t index = 0; index != vec13.size(); ++index) {
+					Assert::AreEqual(data10.get()[index], vec13[index]);
+				}*/
+				vec13 = big.getImage<double>(9 * i % 3);
+				vec13 = big.getImage<double>(9 * i % 6);
+				vec13 = big.getImage<double>(9 * i % 5);
+				vec13 = big.getImage<double>(9 * i % 4);
+				vec13 = big.getImage<double>(9 * i % 12);
+				vec13 = big.getImage<double>(9 * i % 7);
+				vec13 = big.getImage<double>(9 * i % 8);
+				vec13 = big.getImage<double>(9 * i % 13);
+				auto vec14 = big.getImage<float>(8);
+				/*for (uint64_t index = 0; index != vec14.size(); ++index) {
+					Assert::AreEqual(data9.get()[index], vec14[index]);
+				}*/
+			}
+		}
+		TEST_METHOD(BigCoreRead_GetImage_with_cache_time_test) { //5000 -51minut //1500 cache 1000 - èas 4:42,0933288, 600 cache 1000000 - 0:01:30,9463438 o polovièku pomalejší
+			uint16_t n = 5 * 3 * 2;
+			uint64_t data_test_size = 600; //if change this value delete test file or comment if for creating data
+			std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
+			for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
+			std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
+			for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
+			std::shared_ptr<uint32_t> data3{ new uint32_t[n], [](uint32_t *p) {delete[] p; } };
+			for (uint32_t i = 0; i != n; ++i) data3.get()[i] = 2 * static_cast<uint32_t>(n) + i;
+			std::shared_ptr<uint64_t> data4{ new uint64_t[n], [](uint64_t *p) {delete[] p; } };
+			for (uint64_t i = 0; i != n; ++i) data4.get()[i] = 2 * static_cast<uint64_t>(n) + i;
+			std::shared_ptr<int8_t> data5{ new int8_t[n], [](int8_t *p) {delete[] p; } };
+			for (int8_t i = 0; i != n; ++i) data5.get()[i] = 2 * static_cast<int8_t>(n) + i;
+			std::shared_ptr<int16_t> data6{ new int16_t[n], [](int16_t *p) {delete[] p; } };
+			for (int16_t i = 0; i != n; ++i) data6.get()[i] = 2 * static_cast<int16_t>(n) + i;
+			std::shared_ptr<int32_t> data7{ new int32_t[n], [](int32_t *p) {delete[] p; } };
+			for (int32_t i = 0; i != n; ++i) data7.get()[i] = 2 * static_cast<int32_t>(n) + i;
+			std::shared_ptr<int64_t> data8{ new int64_t[n], [](int64_t *p) {delete[] p; } };
+			for (int64_t i = 0; i != n; ++i) data8.get()[i] = 2 * static_cast<int64_t>(n) + i;
+			std::shared_ptr<float> data9{ new float[n], [](float *p) {delete[] p; } };
+			for (int i = 0; i != n; ++i) data9.get()[i] = 2 * static_cast<float>(n) + i;
+			std::shared_ptr<double> data10{ new double[n], [](double *p) {delete[] p; } };
+			for (int i = 0; i != n; ++i) data10.get()[i] = 2 * static_cast<double>(n) + i;
+			std::shared_ptr<half> data11{ new half[n], [](half *p) {delete[] p; } };
+			for (int i = 0; i != n; ++i) { data11.get()[i] = 2 * static_cast<half> (n) + i; }
+			uint64_t number_of_imadges = data_test_size * 11;
+			//if (!exists_test("testCoreRead_getImage_cache_test1.big"))
+			{
+				big::BigCoreWrite big("testCoreRead_getImage_cache_test1.big", 2, 3, 5);
+				uint64_t j = 0;
+				while (j < data_test_size) {
+					big.pushEntity(data1, big::DataTypes::UINT16_T);
+					big.pushEntity(data2, big::DataTypes::UINT8_T);
+					big.pushEntity(data3, big::DataTypes::UINT32_T);
+					big.pushEntity(data4, big::DataTypes::UINT64_T);
+					big.pushEntity(data5, big::DataTypes::INT8_T);
+					big.pushEntity(data6, big::DataTypes::INT16_T);
+					big.pushEntity(data7, big::DataTypes::INT32_T);
+					big.pushEntity(data8, big::DataTypes::INT64_T);
+					big.pushEntity(data9, big::DataTypes::FLOAT);
+					big.pushEntity(data10, big::DataTypes::DOUBLE);
+					big.pushEntity(data11, big::DataTypes::HALF);
+					j++;
+				}
+			}
+			big::BigCoreRead big("testCoreRead_getImage_cache_test1.big", false, 0);
+			Assert::AreEqual(number_of_imadges, big.getNumberOfImages());
+			Assert::AreEqual(2ull, big.getImageHeight());
+			Assert::AreEqual(3ull, big.getImageWidth());
+			Assert::AreEqual(5ull, big.getNumberOfPlanes());
+			const auto &dataOrder = big.getDataOrder();
+			for (uint64_t i = 0; i != dataOrder.size(); ++i) {
+				Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
+			}
+			std::vector<big::DataTypes> testDataType{ big::DataTypes::UINT16_T, big::DataTypes::UINT8_T, big::DataTypes::UINT32_T, big::DataTypes::UINT64_T, big::DataTypes::INT8_T,  big::DataTypes::INT16_T, big::DataTypes::INT32_T, big::DataTypes::INT64_T, big::DataTypes::FLOAT, big::DataTypes::DOUBLE, big::DataTypes::HALF };
+			const auto &dataType = big.getDataType();
+			for (uint64_t i = 0; i != dataType.size(); ++i) {
+				Assert::AreEqual(testDataType[i % 11], dataType[i]);
+			}
+			uint64_t i = 0;
+			while (i < 11 * data_test_size)
+			{
+				big::BigCoreRead big("testCoreRead_getImage_cache_test1.big", false, 100000ull);
+				auto vec = big.getImage<uint16_t>(i);
+				/*for (uint64_t index = 0; index != vec.size(); ++index) {
+					Assert::AreEqual(data1.get()[index], vec[index]);
+				}*/
+				i++;
+
+				auto vec2 = big.getImage<uint8_t>(i);
+				/*for (uint64_t index = 0; index != vec2.size(); ++index) {
+					Assert::AreEqual(data2.get()[index], vec2[index]);
+				}*/
+				i++;
+
+				auto vec3 = big.getImage<uint32_t>(i);
+				/*for (uint64_t index = 0; index != vec3.size(); ++index) {
+					Assert::AreEqual(data3.get()[index], vec3[index]);
+				}*/
+				i++;
+				auto vec4 = big.getImage<uint64_t>(i);
+				/*for (uint64_t index = 0; index != vec4.size(); ++index) {
+					Assert::AreEqual(data4.get()[index], vec4[index]);
+				}*/
+				i++;
+				auto vec6 = big.getImage<int8_t>(i);
+				/*for (uint64_t index = 0; index != vec6.size(); ++index) {
+					Assert::AreEqual(data5.get()[index], vec6[index]);
+				}*/
+				i++;
+				auto vec7 = big.getImage<int16_t>(i);
+				/*for (uint64_t index = 0; index != vec7.size(); ++index) {
+					Assert::AreEqual(data6.get()[index], vec7[index]);
+				}*/
+				i++;
+				auto vec8 = big.getImage<int32_t>(i);
+				/*for (uint64_t index = 0; index != vec8.size(); ++index) {
+					Assert::AreEqual(data7.get()[index], vec8[index]);
+				}*/
+				i++;
+				auto vec9 = big.getImage<int64_t>(i);
+				/*for (uint64_t index = 0; index != vec9.size(); ++index) {
+					Assert::AreEqual(data8.get()[index], vec9[index]);
+				}*/
+				i++;
+				auto vec10 = big.getImage<float>(i);
+				/*for (uint64_t index = 0; index != vec10.size(); ++index) {
+					Assert::AreEqual(data9.get()[index], vec10[index]);
+				}*/
+				i++;
+				auto vec11 = big.getImage<double>(i);
+				/*for (uint64_t index = 0; index != vec11.size(); ++index) {
+					Assert::AreEqual(data10.get()[index], vec11[index]);
+				}*/
+				i++;
+				auto vec12 = big.getImage<half>(i);
+				/*for (uint64_t index = 0; index != vec12.size(); ++index) {
+					Assert::AreEqual(data11.get()[index], vec12[index]);
+				}*/
+				i++;
+
+				auto vec13 = big.getImage<double>(9);
+				 vec13 = big.getImage<double>(9 * i % 3);
+				 vec13 = big.getImage<double>(9 * i % 6);
+				 vec13 = big.getImage<double>(9 * i % 5);
+				 vec13 = big.getImage<double>(9 * i % 4);
+				 vec13 = big.getImage<double>(9 * i % 12);
+				 vec13 = big.getImage<double>(9 *  i % 7);
+				 vec13 = big.getImage<double>(9 * i % 8);
+				 vec13 = big.getImage<double>(9 * i%13);
+				/*for (uint64_t index = 0; index != vec13.size(); ++index) {
+					Assert::AreEqual(data10.get()[index], vec13[index]);
+				}*/
+				auto vec14 = big.getImage<float>(8);
+				/*for (uint64_t index = 0; index != vec14.size(); ++index) {
+					Assert::AreEqual(data9.get()[index], vec14[index]);
+				}*/
+			}
+		}
 
     };
 }

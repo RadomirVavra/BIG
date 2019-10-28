@@ -37,214 +37,56 @@ namespace big
 
     public:
 
-        BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes)
-            : file(file), entitySizes(entitySizes), dataPositions(dataPositions), dataTypes(dataTypes)
-        {
-            entities.resize(entitySizes.size());
-        }
+		BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes);
 
-        void setSize(uint64_t maxSize) { this->maxSize = maxSize; }
+		//set max cachce size
+		void setSize(uint64_t maxSize);
 
-        uint64_t getSize() { return currentSize; }
+		//return size of used memoryy
+		uint64_t getSize();
 
-        void load(std::ifstream &file)
-        {
-            uint64_t totalSize = 0;
-            for (const auto & entitySize : entitySizes) totalSize += entitySize;
-            if (totalSize <= maxSize) {
-                for (uint64_t index = 0; index != entities.size(); ++index) {
-                    if (entities[index].data != nullptr) continue;
-                    pull(index);
-                }
-            }
-        }
-
-        void clear()
-        {
-            while (!lru_list.empty()) pop();
-        }
-
-        void shrink()
-        {
-            while (currentSize > maxSize) pop();
-        }
-
+		//load data until cache isn't full 
+		void load(std::ifstream &file);
+        
+		//clear list of recently used entities
+		void clear();
+        
+		//shrink cache data to max size
+		void shrink();
+        
         // Returns pointer to the entity specified by its index.
-        std::shared_ptr<const char> operator[] (uint64_t index)
-        {
-            Entity& entity = entities[index];
-            if (entity.data == nullptr) {
-                if (entitySizes[index] <= maxSize) insert(index);
-                else {
-                    std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-                    file.seekg(dataPositions[index]);
-                    file.read(data.get(), entitySizes[index]);
-                    return data;
-                }
-            }
-            else {
-                lru_list.splice(lru_list.end(), lru_list, entity.it);
-            }
-            return entity.data;
-        }
-
+		std::shared_ptr<const char> operator[] (uint64_t index);
+        
+		// Returns pointer to the entity specified by its index.
         template<typename T>
-        std::vector<T> getEntity(uint64_t index)
-        {
-            Entity& entity = entities[index];
-            std::shared_ptr<char> data = entity.data;
-            if (data == nullptr) {
-                if (entitySizes[index] <= maxSize) {
-                    insert(index);
-                    data = entity.data;
-                }
-                else {
-                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-                    file.seekg(dataPositions[index]);
-                    file.read(data.get(), entitySizes[index]);
-                }
-            }
-            else {
-                lru_list.splice(lru_list.end(), lru_list, entity.it);
-            }
-
-            std::vector<T> vec;
-
-            switch (dataTypes[index])
-            {
-                case DataTypes::UINT8_T:
-                {
-                    vec.reserve(entitySizes[index]);
-                    for (uint64_t i = 0; i != entitySizes[index]; ++i) {
-                        vec.push_back(convert<T, uint8_t>(reinterpret_cast<uint8_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::UINT16_T:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, uint16_t>(reinterpret_cast<uint16_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::UINT32_T:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, uint32_t>(reinterpret_cast<uint32_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::UINT64_T:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, uint64_t>(reinterpret_cast<uint64_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::INT8_T:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, int8_t>(reinterpret_cast<int8_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::INT16_T:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, int16_t>(reinterpret_cast<int16_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::INT32_T:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, int32_t>(reinterpret_cast<int32_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::INT64_T:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, int64_t>(reinterpret_cast<int64_t*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-               case DataTypes::HALF:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, half>(reinterpret_cast<half*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::FLOAT:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, float>(reinterpret_cast<float*>(data.get())[i]));
-                    }
-                    return vec;
-                }
-                case DataTypes::DOUBLE:
-                {
-                    vec.reserve(entitySizes[index] / 2);
-                    for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-                        vec.push_back(convert<T, double>(reinterpret_cast<double*>(data.get())[i]));
-                    }
-                    return vec;
-                }
+		std::vector<T> getEntity(uint64_t index);
         
-        
-            }
-
-        
-        
-            return vec;
-        }
-
+		// return element by entity ID and her index
         template<typename T>
         T getElement(uint64_t entityID, uint64_t index);
 
-
+		//return element from cache by entity ID and her index
         template<typename T>
         T getElementFromMemory(uint64_t entityID, uint64_t index);
 
     private:
 
+		//coverts datatypes
         template<typename Tdst, typename Tsrc>
         Tdst convert(Tsrc value);
 
+		//load and save element from file to cache, select by entity ID and her index
         template<typename T>
         T getElementFromFile(uint64_t entityID, uint64_t index);
 
-        void pop()
-        {
-            entities[lru_list.front()].data.reset();
-            currentSize -= entitySizes[lru_list.front()];
-            lru_list.pop_front();
-        }
+		//delete least used entity
+		void pop();
+        
 
-        void pull(uint64_t index)
-        {
-            entities[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-            file.seekg(dataPositions[index]);
-            file.read(entities[index].data.get(), entitySizes[index]);
-            currentSize += entitySizes[index];
-            entities[index].it = lru_list.insert(lru_list.end(), index);
-        }
+		void pull(uint64_t index);
 
-        void insert(const uint64_t& index)
-        {
-            while (currentSize + entitySizes[index] > maxSize) pop();
-            pull(index);
-        }
+		void insert(const uint64_t& index);
+        
     };
 }
 
