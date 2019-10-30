@@ -5,7 +5,9 @@
 #include <random>
 
 #define DATA_TEST_SIZE 7500
+#define DATA_TEST_SIZE2 500 //for cache test where i read all elements of file
 #define NUMBER_OF_READS 150000
+#define CACHE_SIZE 10000000ull
 
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -1111,7 +1113,7 @@ namespace big_test
         }
 		TEST_METHOD(BigCoreRead_GetImage_without_cache_time_test) { //39 sec // size 1500 èas 0:04:45,2582933,  600 prvkù dvakrát rychlejší 0:00:47,1344158
 			uint16_t n = 5 * 3 * 2;
-			uint64_t data_test_size = DATA_TEST_SIZE; //if change this value delete test file or comment if for creating data
+			uint64_t data_test_size = DATA_TEST_SIZE2; //if change this value delete test file or comment if for creating data
 			std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
 			for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
 			std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
@@ -1169,7 +1171,7 @@ namespace big_test
 				Assert::AreEqual(testDataType[i%11], dataType[i]);
 			}
 			uint64_t i = 0;
-			while(i< 11* data_test_size)
+			while(i< data_test_size * 11)
 			{
 				big::BigCoreRead big("testCoreRead_getImage_cache_test1.big", false, 0);
 				auto vec = big.getImage<uint16_t>(i);
@@ -1250,7 +1252,7 @@ namespace big_test
 		}
 		TEST_METHOD(BigCoreRead_GetImage_with_cache_time_test) { //5000 -51minut //1500 cache 1000 - èas 4:42,0933288, 600 cache 1000000 - 0:01:30,9463438 o polovièku pomalejší
 			uint16_t n = 5 * 3 * 2;
-			uint64_t data_test_size = DATA_TEST_SIZE; //if change this value delete test file or comment if for creating data file contain 11*more  images
+			uint64_t data_test_size = DATA_TEST_SIZE2; //if change this value delete test file or comment if for creating data file contain 11*more  images
 			std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
 			for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
 			std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
@@ -1308,9 +1310,9 @@ namespace big_test
 				Assert::AreEqual(testDataType[i % 11], dataType[i]);
 			}
 			uint64_t i = 0;
-			while (i < 11 * data_test_size)
+			while (i < data_test_size*11)
 			{
-				big::BigCoreRead big("testCoreRead_getImage_cache_test1.big", false, 100000ull);
+				big::BigCoreRead big("testCoreRead_getImage_cache_test1.big", false, CACHE_SIZE);
 				auto vec = big.getImage<uint16_t>(i);
 				/*for (uint64_t index = 0; index != vec.size(); ++index) {
 					Assert::AreEqual(data1.get()[index], vec[index]);
@@ -1434,7 +1436,7 @@ namespace big_test
 					j++;
 				}
 			}
-			big::BigCoreRead big("testCoreRead_randomRead_cache_test1.big", false, 12000000ull);
+			big::BigCoreRead big("testCoreRead_randomRead_cache_test1.big", false, CACHE_SIZE);
 			Assert::AreEqual(number_of_imadges, big.getNumberOfImages());
 			Assert::AreEqual(2ull, big.getImageHeight());
 			Assert::AreEqual(3ull, big.getImageWidth());
@@ -1655,6 +1657,286 @@ namespace big_test
 
 
 		}
+        TEST_METHOD(BigCoreRead_Random_at_without_cache) {
+            uint16_t n = 5 * 3 * 2;
+            uint64_t data_test_size = DATA_TEST_SIZE; //if change this value delete test file or comment if for creating data
+            std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
+            for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
+            std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
+            for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
+            std::shared_ptr<uint32_t> data3{ new uint32_t[n], [](uint32_t *p) {delete[] p; } };
+            for (uint32_t i = 0; i != n; ++i) data3.get()[i] = 2 * static_cast<uint32_t>(n) + i;
+            std::shared_ptr<uint64_t> data4{ new uint64_t[n], [](uint64_t *p) {delete[] p; } };
+            for (uint64_t i = 0; i != n; ++i) data4.get()[i] = 2 * static_cast<uint64_t>(n) + i;
+            std::shared_ptr<int8_t> data5{ new int8_t[n], [](int8_t *p) {delete[] p; } };
+            for (int8_t i = 0; i != n; ++i) data5.get()[i] = 2 * static_cast<int8_t>(n) + i;
+            std::shared_ptr<int16_t> data6{ new int16_t[n], [](int16_t *p) {delete[] p; } };
+            for (int16_t i = 0; i != n; ++i) data6.get()[i] = 2 * static_cast<int16_t>(n) + i;
+            std::shared_ptr<int32_t> data7{ new int32_t[n], [](int32_t *p) {delete[] p; } };
+            for (int32_t i = 0; i != n; ++i) data7.get()[i] = 2 * static_cast<int32_t>(n) + i;
+            std::shared_ptr<int64_t> data8{ new int64_t[n], [](int64_t *p) {delete[] p; } };
+            for (int64_t i = 0; i != n; ++i) data8.get()[i] = 2 * static_cast<int64_t>(n) + i;
+            std::shared_ptr<float> data9{ new float[n], [](float *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) data9.get()[i] = 2 * static_cast<float>(n) + i;
+            std::shared_ptr<double> data10{ new double[n], [](double *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) data10.get()[i] = 2 * static_cast<double>(n) + i;
+            std::shared_ptr<half> data11{ new half[n], [](half *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) { data11.get()[i] = 2 * static_cast<half> (n) + i; }
+            uint64_t number_of_imadges = data_test_size * 11;
+            //if (!exists_test("testCoreRead_random_at_cache_test1.big"))
+            {
+                big::BigCoreWrite big("testCoreRead_random_at_cache_test1.big", 2, 3, 5);
+                uint64_t j = 0;
+                while (j < data_test_size) {
+                    big.pushEntity(data1, big::DataTypes::UINT16_T);
+                    big.pushEntity(data2, big::DataTypes::UINT8_T);
+                    big.pushEntity(data3, big::DataTypes::UINT32_T);
+                    big.pushEntity(data4, big::DataTypes::UINT64_T);
+                    big.pushEntity(data5, big::DataTypes::INT8_T);
+                    big.pushEntity(data6, big::DataTypes::INT16_T);
+                    big.pushEntity(data7, big::DataTypes::INT32_T);
+                    big.pushEntity(data8, big::DataTypes::INT64_T);
+                    big.pushEntity(data9, big::DataTypes::FLOAT);
+                    big.pushEntity(data10, big::DataTypes::DOUBLE);
+                    big.pushEntity(data11, big::DataTypes::HALF);
+                    j++;
+                }
+            }
+            big::BigCoreRead big("testCoreRead_random_at_cache_test1.big", false, 0);
+            Assert::AreEqual(number_of_imadges, big.getNumberOfImages());
+            Assert::AreEqual(2ull, big.getImageHeight());
+            Assert::AreEqual(3ull, big.getImageWidth());
+            Assert::AreEqual(5ull, big.getNumberOfPlanes());
+            const auto &dataOrder = big.getDataOrder();
+            for (uint64_t i = 0; i != dataOrder.size(); ++i) {
+                Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
+            }
+            std::vector<big::DataTypes> testDataType{ big::DataTypes::UINT16_T, big::DataTypes::UINT8_T, big::DataTypes::UINT32_T, big::DataTypes::UINT64_T, big::DataTypes::INT8_T,  big::DataTypes::INT16_T, big::DataTypes::INT32_T, big::DataTypes::INT64_T, big::DataTypes::FLOAT, big::DataTypes::DOUBLE, big::DataTypes::HALF };
+            const auto &dataType = big.getDataType();
+            for (uint64_t i = 0; i != dataType.size(); ++i) {
+                Assert::AreEqual(testDataType[i % 11], dataType[i]);
+            }
+            uint64_t i = 0;
+            std::random_device rd;
+            std::mt19937_64 gen(rd());
+            std::uniform_int_distribution<uint64_t> dis(0, number_of_imadges - 12);
+            std::uniform_int_distribution<uint64_t> dis1(0, big.getImageHeight()-1);
+            std::uniform_int_distribution<uint64_t> dis2(0, big.getImageWidth()-1);
+            std::uniform_int_distribution<uint64_t> dis3(0, big.getNumberOfPlanes()-1);
+           
+            while (i < NUMBER_OF_READS)
+            {
+                uint64_t imageNum = dis(gen);
+                uint64_t rowIndex = dis1(gen);
+                uint64_t colIndex = dis2(gen);
+                uint64_t numberOfPlanes = dis3(gen);
+                switch (big.getEntityDataType(imageNum))
+                {
+                case big::DataTypes::UINT8_T:
+                {
+                    auto point = big.at<uint8_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+
+                }
+                case big::DataTypes::UINT16_T:
+                {
+                    auto point = big.at<uint16_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::UINT32_T:
+                {
+                    auto point = big.at<uint32_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::UINT64_T:
+                {
+                    auto point = big.at<uint64_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT8_T:
+                {
+                    auto point = big.at<int8_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT16_T:
+                {
+                    auto point = big.at<int16_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT32_T:
+                {
+                    auto point = big.at<int32_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT64_T:
+                {
+                    auto point = big.at<int64_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::HALF:
+                {
+                    auto point = big.at<half>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+
+                }
+                case big::DataTypes::FLOAT:
+                {
+                    auto point = big.at<float>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::DOUBLE:
+                {
+                    auto point = big.at<double>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                }
+                i++;
+
+            }
+
+
+        }
+        TEST_METHOD(BigCoreRead_Random_at_with_cache) {
+            uint16_t n = 5 * 3 * 2;
+            uint64_t data_test_size = DATA_TEST_SIZE; //if change this value delete test file or comment if for creating data
+            std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
+            for (uint16_t i = 0; i != n; ++i) data1.get()[i] = i;
+            std::shared_ptr<uint8_t> data2{ new uint8_t[n], [](uint8_t *p) {delete[] p; } };
+            for (uint8_t i = 0; i != n; ++i) data2.get()[i] = static_cast<uint8_t>(n) + i;
+            std::shared_ptr<uint32_t> data3{ new uint32_t[n], [](uint32_t *p) {delete[] p; } };
+            for (uint32_t i = 0; i != n; ++i) data3.get()[i] = 2 * static_cast<uint32_t>(n) + i;
+            std::shared_ptr<uint64_t> data4{ new uint64_t[n], [](uint64_t *p) {delete[] p; } };
+            for (uint64_t i = 0; i != n; ++i) data4.get()[i] = 2 * static_cast<uint64_t>(n) + i;
+            std::shared_ptr<int8_t> data5{ new int8_t[n], [](int8_t *p) {delete[] p; } };
+            for (int8_t i = 0; i != n; ++i) data5.get()[i] = 2 * static_cast<int8_t>(n) + i;
+            std::shared_ptr<int16_t> data6{ new int16_t[n], [](int16_t *p) {delete[] p; } };
+            for (int16_t i = 0; i != n; ++i) data6.get()[i] = 2 * static_cast<int16_t>(n) + i;
+            std::shared_ptr<int32_t> data7{ new int32_t[n], [](int32_t *p) {delete[] p; } };
+            for (int32_t i = 0; i != n; ++i) data7.get()[i] = 2 * static_cast<int32_t>(n) + i;
+            std::shared_ptr<int64_t> data8{ new int64_t[n], [](int64_t *p) {delete[] p; } };
+            for (int64_t i = 0; i != n; ++i) data8.get()[i] = 2 * static_cast<int64_t>(n) + i;
+            std::shared_ptr<float> data9{ new float[n], [](float *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) data9.get()[i] = 2 * static_cast<float>(n) + i;
+            std::shared_ptr<double> data10{ new double[n], [](double *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) data10.get()[i] = 2 * static_cast<double>(n) + i;
+            std::shared_ptr<half> data11{ new half[n], [](half *p) {delete[] p; } };
+            for (int i = 0; i != n; ++i) { data11.get()[i] = 2 * static_cast<half> (n) + i; }
+            uint64_t number_of_imadges = data_test_size * 11;
+            //if (!exists_test("testCoreRead_random_at_cache_test1.big"))
+            {
+                big::BigCoreWrite big("testCoreRead_random_at_cache_test1.big", 2, 3, 5);
+                uint64_t j = 0;
+                while (j < data_test_size) {
+                    big.pushEntity(data1, big::DataTypes::UINT16_T);
+                    big.pushEntity(data2, big::DataTypes::UINT8_T);
+                    big.pushEntity(data3, big::DataTypes::UINT32_T);
+                    big.pushEntity(data4, big::DataTypes::UINT64_T);
+                    big.pushEntity(data5, big::DataTypes::INT8_T);
+                    big.pushEntity(data6, big::DataTypes::INT16_T);
+                    big.pushEntity(data7, big::DataTypes::INT32_T);
+                    big.pushEntity(data8, big::DataTypes::INT64_T);
+                    big.pushEntity(data9, big::DataTypes::FLOAT);
+                    big.pushEntity(data10, big::DataTypes::DOUBLE);
+                    big.pushEntity(data11, big::DataTypes::HALF);
+                    j++;
+                }
+            }
+            big::BigCoreRead big("testCoreRead_random_at_cache_test1.big", false, CACHE_SIZE);
+            Assert::AreEqual(number_of_imadges, big.getNumberOfImages());
+            Assert::AreEqual(2ull, big.getImageHeight());
+            Assert::AreEqual(3ull, big.getImageWidth());
+            Assert::AreEqual(5ull, big.getNumberOfPlanes());
+            const auto &dataOrder = big.getDataOrder();
+            for (uint64_t i = 0; i != dataOrder.size(); ++i) {
+                Assert::AreEqual(big::defaultDataOrder[i], dataOrder[i]);
+            }
+            std::vector<big::DataTypes> testDataType{ big::DataTypes::UINT16_T, big::DataTypes::UINT8_T, big::DataTypes::UINT32_T, big::DataTypes::UINT64_T, big::DataTypes::INT8_T,  big::DataTypes::INT16_T, big::DataTypes::INT32_T, big::DataTypes::INT64_T, big::DataTypes::FLOAT, big::DataTypes::DOUBLE, big::DataTypes::HALF };
+            const auto &dataType = big.getDataType();
+            for (uint64_t i = 0; i != dataType.size(); ++i) {
+                Assert::AreEqual(testDataType[i % 11], dataType[i]);
+            }
+            uint64_t i = 0;
+            std::random_device rd;
+            std::mt19937_64 gen(rd());
+            std::uniform_int_distribution<uint64_t> dis(0, number_of_imadges - 12);
+            std::uniform_int_distribution<uint64_t> dis1(0, big.getImageHeight() - 1);
+            std::uniform_int_distribution<uint64_t> dis2(0, big.getImageWidth() - 1);
+            std::uniform_int_distribution<uint64_t> dis3(0, big.getNumberOfPlanes() - 1);
+
+            while (i < NUMBER_OF_READS)
+            {
+                uint64_t imageNum = dis(gen);
+                uint64_t rowIndex = dis1(gen);
+                uint64_t colIndex = dis2(gen);
+                uint64_t numberOfPlanes = dis3(gen);
+                switch (big.getEntityDataType(imageNum))
+                {
+                case big::DataTypes::UINT8_T:
+                {
+                    auto point = big.at<uint8_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+
+                }
+                case big::DataTypes::UINT16_T:
+                {
+                    auto point = big.at<uint16_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::UINT32_T:
+                {
+                    auto point = big.at<uint32_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::UINT64_T:
+                {
+                    auto point = big.at<uint64_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT8_T:
+                {
+                    auto point = big.at<int8_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT16_T:
+                {
+                    auto point = big.at<int16_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT32_T:
+                {
+                    auto point = big.at<int32_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::INT64_T:
+                {
+                    auto point = big.at<int64_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::HALF:
+                {
+                    auto point = big.at<half>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+
+                }
+                case big::DataTypes::FLOAT:
+                {
+                    auto point = big.at<float>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                case big::DataTypes::DOUBLE:
+                {
+                    auto point = big.at<double>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    break;
+                }
+                }
+                i++;
+
+            }
+
+
+        }
 
     };
+
+    
 }
