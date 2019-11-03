@@ -22,6 +22,7 @@ namespace big
         {
             std::shared_ptr<char> data;
             std::list<uint64_t>::iterator it;
+            uint64_t time;
         };
 
         std::vector<Entity> entities;           // entities currently stored in a memory
@@ -29,6 +30,7 @@ namespace big
 
         uint64_t currentSize = 0;               // size of the used memory
         uint64_t maxSize = DEFAULT_CACHE_SIZE;  // the maximal size of usable memory
+        uint64_t time = 0;                      // changed everytime i work with data
 
         std::vector<uint64_t>& entitySizes;// = std::vector<uint64_t>();    // sizes of the entities
         std::vector<uint64_t>& dataPositions;// = std::vector<uint64_t>();  // positions of the entities in a file

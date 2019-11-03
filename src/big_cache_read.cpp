@@ -186,6 +186,8 @@ namespace big
 		file.read(entities[index].data.get(), entitySizes[index]);
 		currentSize += entitySizes[index];
 		entities[index].it = lru_list.insert(lru_list.end(), index);
+        time++;
+        entities[index].time = time;
 	}
 	void BigCacheRead::insert(const uint64_t& index) {
 		while (currentSize + entitySizes[index] > maxSize) pop();
@@ -204,6 +206,8 @@ namespace big
 			}
 		}
 		else {
+            time++;
+            entity.time = time;
 			lru_list.splice(lru_list.end(), lru_list, entity.it);
 		}
 		return entity.data;
@@ -225,6 +229,8 @@ namespace big
 			}
 		}
 		else {
+            time++;
+            entity.time = time;
 			lru_list.splice(lru_list.end(), lru_list, entity.it);
 		}
 
