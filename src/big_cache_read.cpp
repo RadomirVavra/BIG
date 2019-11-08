@@ -141,210 +141,768 @@ namespace big
     template<> half BigCacheRead::convert(float value) { return half_cast<half>(value); }
     template<> half BigCacheRead::convert(double value) { return half_cast<half>(value); }
 
-	void BigCacheRead::setSize(uint64_t maxSize) {
-		{ this->maxSize = maxSize; }
-	}
+    void BigCacheRead::setSize(uint64_t maxSize) {
+        { this->maxSize = maxSize; }
+    }
 
-	uint64_t BigCacheRead::getSize() { return currentSize; }
+    uint64_t BigCacheRead::getSize() { return currentSize; }
 
-	BigCacheRead::BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes)
-		: file(file), entitySizes(entitySizes), dataPositions(dataPositions), dataTypes(dataTypes)
-	{
-		entities.resize(entitySizes.size());
-	}
-	void BigCacheRead::load(std::ifstream &file)
-	{
-		uint64_t totalSize = 0;
-		for (const auto & entitySize : entitySizes) totalSize += entitySize;
-		if (totalSize <= maxSize) {
-			for (uint64_t index = 0; index != entities.size(); ++index) {
-				if (entities[index].data != nullptr) continue;
-				pull(index);
-			}
-		}
-	}
-	
-	void BigCacheRead::clear()
-	{
-		while (!lru_list.empty()) pop();
-	}
+    BigCacheRead::BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes)
+        : file(file), entitySizes(entitySizes), dataPositions(dataPositions), dataTypes(dataTypes)
+    {
+        entities_8.resize(entitySizes.size());
+        entities_16.resize(entitySizes.size());
+        entities_32.resize(entitySizes.size());
+        entities_64.resize(entitySizes.size());
+    }
+    void BigCacheRead::load(std::ifstream &file)
+    {
+        uint64_t totalSize = 0;
+        for (const auto & entitySize : entitySizes) totalSize += entitySize;
+        if (totalSize <= maxSize) {
+            for (uint64_t index = 0; index != entities_8.size(); ++index) {
+                switch (dataTypes[index])
+                {
+                case DataTypes::UINT8_T:
+                case DataTypes::INT8_T:
+                    if (entities_8[index].data != nullptr) continue;
+                    pull8(index);
+                    break;
+                case DataTypes::UINT16_T:
+                case DataTypes::INT16_T:
+                case DataTypes::HALF:
+                    if (entities_16[index].data != nullptr) continue;
+                    pull16(index);
+                    break;
+                case DataTypes::UINT32_T:
+                case DataTypes::INT32_T:
+                case DataTypes::FLOAT:
+                    if (entities_32[index].data != nullptr) continue;
+                    pull32(index);
+                    break;
+                case DataTypes::UINT64_T:
+                case DataTypes::INT64_T:
+                case DataTypes::DOUBLE:
+                    if (entities_64[index].data != nullptr) continue;
+                    pull64(index);
+                    break;
+                }
+                
 
-	void BigCacheRead::shrink()
-	{
-		while (currentSize > maxSize) pop();
-	}
+                
+            }
+        }
+    }
+    
+    void BigCacheRead::clear()
+    {
+        while (!lru_list_8.empty()) pop8();
+        while (!lru_list_16.empty()) pop16();
+        while (!lru_list_32.empty()) pop32();
+        while (!lru_list_64.empty()) pop64();
+    }
 
-	void BigCacheRead::pop() {
-		entities[lru_list.front()].data.reset();
-		currentSize -= entitySizes[lru_list.front()];
-		lru_list.pop_front();
-	}
+    void BigCacheRead::shrink()
+    {
+        while (currentSize > maxSize) pop(DataTypes::UINT8_T); // bude mazat jen 8 bitové nejlepší by bylo udìlat pseudonáhodný výbìr nebo vlastní funkci a mazat vždy nejstarší
+    }
 
-	void BigCacheRead::pull(uint64_t index) {
-		entities[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-		file.seekg(dataPositions[index]);
-		file.read(entities[index].data.get(), entitySizes[index]);
-		currentSize += entitySizes[index];
-		entities[index].it = lru_list.insert(lru_list.end(), index);
+    void BigCacheRead::pop(DataTypes dataType) {
+        switch (dataType)
+            {
+            case DataTypes::UINT8_T:
+            case DataTypes::INT8_T:
+            {
+                if (lru_list_8.size() > 0)
+                    pop8();
+                else
+                    pop(DataTypes::UINT16_T);
+                break;
+            }
+        case DataTypes::UINT16_T:
+        case DataTypes::INT16_T:
+        case DataTypes::HALF:
+        {
+            if (lru_list_16.size() > 0) {
+                std::list<uint64_t>::iterator it = lru_list_8.begin();
+                if (lru_list_8.size() >= 2) {
+                    std::next(it);
+                    if (entities_16[lru_list_16.front()].time >= entities_8[*it].time)
+                        pop16();
+                    else
+                    {
+                        pop(DataTypes::UINT8_T);
+                        pop(DataTypes::UINT8_T);
+                    }
+                }
+            }
+            else if (lru_list_8.size() >= 2) {
+                pop(DataTypes::UINT8_T);
+                pop(DataTypes::UINT8_T);
+            }
+            else
+                pop(DataTypes::UINT16_T);
+                
+                break;
+            }
+        case DataTypes::UINT32_T:
+        case DataTypes::INT32_T:
+        case DataTypes::FLOAT:
+            {
+            if (lru_list_32.size() > 0) {
+                std::list<uint64_t>::iterator jt = lru_list_16.begin();
+                if (lru_list_16.size() >= 2) {
+                    std::next(jt);
+                    if (entities_32[lru_list_32.front()].time >= entities_16[*jt].time)
+                        pop32();
+                    else
+                    {
+                        pop(DataTypes::INT16_T);
+                        pop(DataTypes::INT16_T);
+                    }
+                }
+            }
+            else if (lru_list_16.size() >= 2) {
+                pop(DataTypes::INT16_T);
+                pop(DataTypes::INT16_T);
+            }
+            else
+                pop(DataTypes::INT64_T);
+                    
+                
+                break;
+            }
+        case DataTypes::UINT64_T:
+        case DataTypes::INT64_T:
+        case DataTypes::DOUBLE:
+            {
+            if (lru_list_64.size() > 0) {
+                std::list<uint64_t>::iterator kt = lru_list_32.begin();
+                if (lru_list_32.size() >= 2)
+                {
+                    std::next(kt);
+                    if (entities_64[lru_list_64.front()].time >= entities_32[*kt].time)
+                        pop64();
+                    else
+                    {
+                        pop(DataTypes::INT32_T); //pro rychlost by bylo lepší rozepsat všechny varianty do kódu, nebude se muset tolikrát procházet pøes switch
+                        pop(DataTypes::INT32_T);
+                    }
+                }
+            }
+            else if (lru_list_32.size() >= 2) {
+                pop(DataTypes::INT32_T); 
+                pop(DataTypes::INT32_T);
+
+            }
+                
+                break;
+            }
+        }
+    }
+
+    void BigCacheRead::pop8() {
+        entities_8[lru_list_8.front()].data.reset();
+        currentSize -= entitySizes[lru_list_8.front()];
+        lru_list_8.pop_front();
+    }
+    void BigCacheRead::pop16() {
+        entities_16[lru_list_16.front()].data.reset();
+        currentSize -= entitySizes[lru_list_16.front()];
+        lru_list_16.pop_front();
+    }
+    void BigCacheRead::pop32() {
+        entities_32[lru_list_32.front()].data.reset();
+        currentSize -= entitySizes[lru_list_32.front()];
+        lru_list_32.pop_front();
+    }
+    void BigCacheRead::pop64() {
+        entities_64[lru_list_64.front()].data.reset();
+        currentSize -= entitySizes[lru_list_64.front()];
+        lru_list_64.pop_front();
+    }
+
+    void BigCacheRead::pull8(uint64_t index) {
+        entities_8[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        file.seekg(dataPositions[index]);
+        file.read(entities_8[index].data.get(), entitySizes[index]);
+        currentSize += entitySizes[index];
+        entities_8[index].it = lru_list_8.insert(lru_list_8.end(), index);
         time++;
-        entities[index].time = time;
-	}
-	void BigCacheRead::insert(const uint64_t& index) {
-		while (currentSize + entitySizes[index] > maxSize) pop();
-		pull(index);
-	}
+        entities_8[index].time = time;
+    }
+    void BigCacheRead::pull16(uint64_t index) {
+        entities_16[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        file.seekg(dataPositions[index]);
+        file.read(entities_16[index].data.get(), entitySizes[index]);
+        currentSize += entitySizes[index];
+        entities_16[index].it = lru_list_16.insert(lru_list_16.end(), index);
+        time++;
+        entities_16[index].time = time;
+    }
+    void BigCacheRead::pull32(uint64_t index) {
+        entities_32[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        file.seekg(dataPositions[index]);
+        file.read(entities_32[index].data.get(), entitySizes[index]);
+        currentSize += entitySizes[index];
+        entities_32[index].it = lru_list_32.insert(lru_list_32.end(), index);
+        time++;
+        entities_32[index].time = time;
+    }
+    void BigCacheRead::pull64(uint64_t index) {
+        entities_64[index].data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        file.seekg(dataPositions[index]);
+        file.read(entities_64[index].data.get(), entitySizes[index]);
+        currentSize += entitySizes[index];
+        entities_64[index].it = lru_list_64.insert(lru_list_64.end(), index);
+        time++;
+        entities_64[index].time = time;
+    }
+    void BigCacheRead::insert(const uint64_t& index) {
+        while (currentSize + entitySizes[index] > maxSize) pop(dataTypes[index]);
+        switch (dataTypes[index])
+        {
+        case DataTypes::UINT8_T:
+        case DataTypes::INT8_T:
+            pull8(index);
+            break;
+        case DataTypes::UINT16_T:
+        case DataTypes::INT16_T:
+        case DataTypes::HALF:
+            pull16(index);
+            break;
+        case DataTypes::UINT32_T:
+        case DataTypes::INT32_T:
+        case DataTypes::FLOAT:
+            pull32(index);
+            break;
+        case DataTypes::UINT64_T:
+        case DataTypes::INT64_T:
+        case DataTypes::DOUBLE:
+            pull64(index);
+            break;
+        }
+    }
 
-	std::shared_ptr<const char>  BigCacheRead::operator[] (uint64_t index) {
-		Entity& entity = entities[index];
-		if (entity.data == nullptr) {
-			if (entitySizes[index] <= maxSize) insert(index);
-			else {
-				std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-				file.seekg(dataPositions[index]);
-				file.read(data.get(), entitySizes[index]);
-				return data;
-			}
-		}
-		else {
-            time++;
-            entity.time = time;
-			lru_list.splice(lru_list.end(), lru_list, entity.it);
-		}
-		return entity.data;
-	}
+    std::shared_ptr<const char>  BigCacheRead::operator[] (uint64_t index) {
+        switch (dataTypes[index])
+        {
+        case DataTypes::UINT8_T:
+        case DataTypes::INT8_T:
+            {
+                Entity& entity = entities_8[index];
+                if (entity.data == nullptr) {
+                    if (entitySizes[index] <= maxSize) insert(index);
+                    else {
+                        std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                        file.seekg(dataPositions[index]);
+                        file.read(data.get(), entitySizes[index]);
+                        return data;
+                    }
+                }
+                else {
+                    time++;
+                    entity.time = time;
+                    lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+                }
+                return entity.data;
+            }
+        case DataTypes::UINT16_T:
+        case DataTypes::INT16_T:
+        case DataTypes::HALF:
+            {
+                Entity& entity = entities_16[index];
+                if (entity.data == nullptr) {
+                    if (entitySizes[index] <= maxSize) insert(index);
+                    else {
+                        std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                        file.seekg(dataPositions[index]);
+                        file.read(data.get(), entitySizes[index]);
+                        return data;
+                    }
+                }
+                else {
+                    time++;
+                    entity.time = time;
+                    lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                }
+                return entity.data;
+            }
+        case DataTypes::UINT32_T:
+        case DataTypes::INT32_T:
+        case DataTypes::FLOAT:
+            {
+                Entity& entity = entities_32[index];
+                if (entity.data == nullptr) {
+                    if (entitySizes[index] <= maxSize) insert(index);
+                    else {
+                        std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                        file.seekg(dataPositions[index]);
+                        file.read(data.get(), entitySizes[index]);
+                        return data;
+                    }
+                }
+                else {
+                    time++;
+                    entity.time = time;
+                    lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                }
+                return entity.data;
+            }
+        case DataTypes::UINT64_T:
+        case DataTypes::INT64_T:
+        case DataTypes::DOUBLE:
+            {
+                Entity& entity = entities_64[index];
+                if (entity.data == nullptr) {
+                    if (entitySizes[index] <= maxSize) insert(index);
+                    else {
+                        std::shared_ptr<char> data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                        file.seekg(dataPositions[index]);
+                        file.read(data.get(), entitySizes[index]);
+                        return data;
+                    }
+                }
+                else {
+                    time++;
+                    entity.time = time;
+                    lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                }
+                return entity.data;
+            }
+            
+        }
+        
+        
+    }
 
-	template<typename T>
-	std::vector<T> BigCacheRead::getEntity(uint64_t index) {
-		Entity& entity = entities[index];
-		std::shared_ptr<char> data = entity.data;
-		if (data == nullptr) {
-			if (entitySizes[index] <= maxSize) {
-				insert(index);
-				data = entity.data;
-			}
-			else {
-				data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-				file.seekg(dataPositions[index]);
-				file.read(data.get(), entitySizes[index]);
-			}
-		}
-		else {
-            time++;
-            entity.time = time;
-			lru_list.splice(lru_list.end(), lru_list, entity.it);
-		}
+    template<typename T>
+    std::vector<T> BigCacheRead::getEntity(uint64_t index) {
+        
+        
+        
+        //switch (dataTypes[index])
+        //{
+        //case DataTypes::UINT8_T:
+        //case DataTypes::INT8_T:
+        //{
+        //    Entity& entity = entities_8[index];
+        //    std::shared_ptr<char> data;
+        //    if (entity.data == nullptr) {
+        //        if (entitySizes[index] <= maxSize) {
+        //            insert(index);
+        //            data = entity.data;
+        //            
+        //        }
+        //        else {
+        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        //            file.seekg(dataPositions[index]);
+        //            file.read(data.get(), entitySizes[index]);
+        //           
+        //        }
+        //    }
+        //    else {
+        //        time++;
+        //        entity.time = time;
+        //        lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+        //    }
+        //   
+        //}
+        //case DataTypes::UINT16_T:
+        //case DataTypes::INT16_T:
+        //case DataTypes::HALF:
+        //{
+        //    Entity& entity = entities_16[index];
+        //    if (entity.data == nullptr) {
+        //        if (entitySizes[index] <= maxSize) { 
+        //            insert(index); 
+        //            data = entity.data;
+        //        }
+        //        else {
+        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        //            file.seekg(dataPositions[index]);
+        //            file.read(data.get(), entitySizes[index]);
+        //            
+        //        }
+        //    }
+        //    else {
+        //        time++;
+        //        entity.time = time;
+        //        lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+        //    }
+        //}
+        //case DataTypes::UINT32_T:
+        //case DataTypes::INT32_T:
+        //case DataTypes::FLOAT:
+        //{
+        //    Entity& entity = entities_32[index];
+        //    if (entity.data == nullptr) {
+        //        if (entitySizes[index] <= maxSize)
+        //        {
+        //            insert(index);
+        //            data = entity.data;
+        //        }
+        //        else {
+        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        //            file.seekg(dataPositions[index]);
+        //            file.read(data.get(), entitySizes[index]);
+        //        }
+        //    }
+        //    else {
+        //        time++;
+        //        entity.time = time;
+        //        lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+        //    }
+        //   
+        //}
+        //case DataTypes::UINT64_T:
+        //case DataTypes::INT64_T:
+        //case DataTypes::DOUBLE:
+        //{
+        //    Entity& entity = entities_64[index];
+        //    if (entity.data == nullptr) {
+        //        if (entitySizes[index] <= maxSize) {
+        //            insert(index);
+        //            data = entity.data;
+        //        }
+        //        else {
+        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+        //            file.seekg(dataPositions[index]);
+        //            file.read(data.get(), entitySizes[index]);
+        //           
+        //        }
+        //    }
+        //    else {
+        //        time++;
+        //        entity.time = time;
+        //        lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+        //    }
+        //  
+        //}
+        //}//switch end
 
-		std::vector<T> vec;
+        std::vector<T> vec;
 
-		switch (dataTypes[index])
-		{
-		case DataTypes::UINT8_T:
-		{
-			vec.reserve(entitySizes[index]);
-			for (uint64_t i = 0; i != entitySizes[index]; ++i) {
-				vec.push_back(convert<T, uint8_t>(reinterpret_cast<uint8_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::UINT16_T:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, uint16_t>(reinterpret_cast<uint16_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::UINT32_T:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, uint32_t>(reinterpret_cast<uint32_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::UINT64_T:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, uint64_t>(reinterpret_cast<uint64_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::INT8_T:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, int8_t>(reinterpret_cast<int8_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::INT16_T:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, int16_t>(reinterpret_cast<int16_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::INT32_T:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, int32_t>(reinterpret_cast<int32_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::INT64_T:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, int64_t>(reinterpret_cast<int64_t*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::HALF:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, half>(reinterpret_cast<half*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::FLOAT:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, float>(reinterpret_cast<float*>(data.get())[i]));
-			}
-			return vec;
-		}
-		case DataTypes::DOUBLE:
-		{
-			vec.reserve(entitySizes[index] / 2);
-			for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
-				vec.push_back(convert<T, double>(reinterpret_cast<double*>(data.get())[i]));
-			}
-			return vec;
-		}
+        switch (dataTypes[index])
+        {
+        case DataTypes::UINT8_T:
+        {
+            Entity& entity = entities_8[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+            }
+            vec.reserve(entitySizes[index]);
+            for (uint64_t i = 0; i != entitySizes[index]; ++i) {
+                vec.push_back(convert<T, uint8_t>(reinterpret_cast<uint8_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::UINT16_T:
+        {
+            Entity& entity = entities_16[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, uint16_t>(reinterpret_cast<uint16_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::UINT32_T:
+        {
+            Entity& entity = entities_32[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize)
+                {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, uint32_t>(reinterpret_cast<uint32_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::UINT64_T:
+        {
+            Entity& entity = entities_64[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, uint64_t>(reinterpret_cast<uint64_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::INT8_T:
+        {
+            Entity& entity = entities_8[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, int8_t>(reinterpret_cast<int8_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::INT16_T:
+        {
+            Entity& entity = entities_16[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, int16_t>(reinterpret_cast<int16_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::INT32_T:
+        {
+            Entity& entity = entities_32[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize)
+                {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, int32_t>(reinterpret_cast<int32_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::INT64_T:
+        {
+            Entity& entity = entities_64[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, int64_t>(reinterpret_cast<int64_t*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::HALF:
+        {
+            Entity& entity = entities_16[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, half>(reinterpret_cast<half*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::FLOAT:
+        {
+            Entity& entity = entities_32[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize)
+                {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, float>(reinterpret_cast<float*>(data.get())[i]));
+            }
+            return vec;
+        }
+        case DataTypes::DOUBLE:
+        {
+            Entity& entity = entities_64[index];
+            std::shared_ptr<char> data;
+            if (entity.data == nullptr) {
+                if (entitySizes[index] <= maxSize) {
+                    insert(index);
+                    data = entity.data;
+                }
+                else {
+                    data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
+                    file.seekg(dataPositions[index]);
+                    file.read(data.get(), entitySizes[index]);
+
+                }
+            }
+            else {
+                time++;
+                entity.time = time;
+                lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+            }
+            vec.reserve(entitySizes[index] / 2);
+            for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
+                vec.push_back(convert<T, double>(reinterpret_cast<double*>(data.get())[i]));
+            }
+            return vec;
+        }
 
 
-		}
+        }
 
 
 
-		return vec;
-	}
-	template std::vector<uint8_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<uint16_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<uint32_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<uint64_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<int8_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<int16_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<int32_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<int64_t> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<half> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<float> BigCacheRead::getEntity(uint64_t index);
-	template std::vector<double> BigCacheRead::getEntity(uint64_t index);
+        return vec;
+    }
+    template std::vector<uint8_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<uint16_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<uint32_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<uint64_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<int8_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<int16_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<int32_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<int64_t> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<half> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<float> BigCacheRead::getEntity(uint64_t index);
+    template std::vector<double> BigCacheRead::getEntity(uint64_t index);
 
     template<typename T>
     T BigCacheRead::getElementFromFile(uint64_t entityID, uint64_t index)
@@ -438,27 +996,27 @@ namespace big
         switch (dataTypes[entityID])
         {
         case DataTypes::UINT8_T:
-            return convert<T, uint8_t>(reinterpret_cast<uint8_t*>(entities[entityID].data.get())[index]);
+            return convert<T, uint8_t>(reinterpret_cast<uint8_t*>(entities_8[entityID].data.get())[index]);
         case DataTypes::UINT16_T:
-            return convert<T, uint16_t>(reinterpret_cast<uint16_t*>(entities[entityID].data.get())[index]);
+            return convert<T, uint16_t>(reinterpret_cast<uint16_t*>(entities_16[entityID].data.get())[index]);
         case DataTypes::UINT32_T:
-            return convert<T, uint32_t>(reinterpret_cast<uint32_t*>(entities[entityID].data.get())[index]);
+            return convert<T, uint32_t>(reinterpret_cast<uint32_t*>(entities_32[entityID].data.get())[index]);
         case DataTypes::UINT64_T:
-            return convert<T, uint64_t>(reinterpret_cast<uint64_t*>(entities[entityID].data.get())[index]);
+            return convert<T, uint64_t>(reinterpret_cast<uint64_t*>(entities_64[entityID].data.get())[index]);
         case DataTypes::INT8_T:
-            return convert<T, int8_t>(reinterpret_cast<int8_t*>(entities[entityID].data.get())[index]);
+            return convert<T, int8_t>(reinterpret_cast<int8_t*>(entities_8[entityID].data.get())[index]);
         case DataTypes::INT16_T:
-            return convert<T, int16_t>(reinterpret_cast<int16_t*>(entities[entityID].data.get())[index]);
+            return convert<T, int16_t>(reinterpret_cast<int16_t*>(entities_16[entityID].data.get())[index]);
         case DataTypes::INT32_T:
-            return convert<T, int32_t>(reinterpret_cast<int32_t*>(entities[entityID].data.get())[index]);
+            return convert<T, int32_t>(reinterpret_cast<int32_t*>(entities_32[entityID].data.get())[index]);
         case DataTypes::INT64_T:
-            return convert<T, int64_t>(reinterpret_cast<int64_t*>(entities[entityID].data.get())[index]);
+            return convert<T, int64_t>(reinterpret_cast<int64_t*>(entities_64[entityID].data.get())[index]);
         case DataTypes::HALF:
-            return convert<T, half>(reinterpret_cast<half*>(entities[entityID].data.get())[index]); 
+            return convert<T, half>(reinterpret_cast<half*>(entities_16[entityID].data.get())[index]); 
         case DataTypes::FLOAT:
-            return convert<T, float>(reinterpret_cast<float*>(entities[entityID].data.get())[index]);
+            return convert<T, float>(reinterpret_cast<float*>(entities_32[entityID].data.get())[index]);
         case DataTypes::DOUBLE:
-            return convert<T, double>(reinterpret_cast<double*>(entities[entityID].data.get())[index]);
+            return convert<T, double>(reinterpret_cast<double*>(entities_64[entityID].data.get())[index]);
         }
         return 0.0_h;
     }
@@ -466,13 +1024,53 @@ namespace big
     template<typename T>
     T BigCacheRead::getElement(uint64_t entityID, uint64_t index)
     {
-        if (entities[entityID].data == nullptr) {
-            if (entitySizes[entityID] <= maxSize) insert(entityID);
-            else return getElementFromFile<T>(entityID, index);
+        switch (dataTypes[entityID])
+        {
+        case DataTypes::UINT8_T:
+        case DataTypes::INT8_T:
+            if (entities_8[entityID].data == nullptr) {
+                if (entitySizes[entityID] <= maxSize) insert(entityID);
+                else return getElementFromFile<T>(entityID, index);
+            }
+            else {
+                if (lru_list_8.back() != entityID) lru_list_8.splice(lru_list_8.end(), lru_list_8, entities_8[entityID].it);
+            }
+            break;
+        case DataTypes::UINT16_T:
+        case DataTypes::INT16_T:
+        case DataTypes::HALF:
+            if (entities_16[entityID].data == nullptr) {
+                if (entitySizes[entityID] <= maxSize) insert(entityID);
+                else return getElementFromFile<T>(entityID, index);
+            }
+            else {
+                if (lru_list_16.back() != entityID) lru_list_16.splice(lru_list_16.end(), lru_list_16, entities_16[entityID].it);
+            }
+            break;
+        case DataTypes::UINT32_T:
+        case DataTypes::INT32_T:
+        case DataTypes::FLOAT:
+            if (entities_32[entityID].data == nullptr) {
+                if (entitySizes[entityID] <= maxSize) insert(entityID);
+                else return getElementFromFile<T>(entityID, index);
+            }
+            else {
+                if (lru_list_32.back() != entityID) lru_list_32.splice(lru_list_32.end(), lru_list_32, entities_32[entityID].it);
+            }
+            break;
+        case DataTypes::UINT64_T:
+        case DataTypes::INT64_T:
+        case DataTypes::DOUBLE:
+            if (entities_64[entityID].data == nullptr) {
+                if (entitySizes[entityID] <= maxSize) insert(entityID);
+                else return getElementFromFile<T>(entityID, index);
+            }
+            else {
+                if (lru_list_64.back() != entityID) lru_list_64.splice(lru_list_64.end(), lru_list_64, entities_64[entityID].it);
+            }
+            break;
         }
-        else {
-            if (lru_list.back() != entityID) lru_list.splice(lru_list.end(), lru_list, entities[entityID].it);
-        }
+       
         return getElementFromMemory<T>(entityID, index);
     }
 

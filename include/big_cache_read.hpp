@@ -25,8 +25,15 @@ namespace big
             uint64_t time;
         };
 
-        std::vector<Entity> entities;           // entities currently stored in a memory
-        std::list<uint64_t> lru_list;           // list of least recently used entities, starting with the least recently used and ending with the most recently used entity
+        std::vector<Entity> entities_8;         // entities 8bit currently stored in a memory - uint8_t, int8_t (can change for unordered_map but we lost speed)
+        std::vector<Entity> entities_16;		// entities 16bit currently stored in a memory - half, uint16_t, int16_t
+        std::vector<Entity> entities_32;		// entities 32bit currently stored in a memory - float, uint32_t, int32_t
+        std::vector<Entity> entities_64;	    // entities 64bit currently stored in a memory - double, uint64_t, int64_t
+        std::list<uint64_t> lru_list_8;         // list of least recently used 8 bit entities, starting with the least recently used and ending with the most recently used entity
+        std::list<uint64_t> lru_list_16;		// list of least recently used 16 bit entities, starting with the least recently used and ending with the most recently used entity
+        std::list<uint64_t> lru_list_32;		// list of least recently used 32 bit entities, starting with the least recently used and ending with the most recently used entity
+        std::list<uint64_t> lru_list_64;		// list of least recently used 64 bit entities, starting with the least recently used and ending with the most recently used entity
+
 
         uint64_t currentSize = 0;               // size of the used memory
         uint64_t maxSize = DEFAULT_CACHE_SIZE;  // the maximal size of usable memory
@@ -39,55 +46,76 @@ namespace big
 
     public:
 
-		BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes);
+        BigCacheRead(std::ifstream &file, std::vector<uint64_t> &entitySizes, std::vector<uint64_t> &dataPositions, std::vector<DataTypes> &dataTypes);
 
-		//set max cachce size
-		void setSize(uint64_t maxSize);
+        //set max cachce size
+        void setSize(uint64_t maxSize);
 
-		//return size of used memoryy
-		uint64_t getSize();
+        //return size of used memoryy
+        uint64_t getSize();
 
-		//load data until cache isn't full 
-		void load(std::ifstream &file);
+        //load data until cache isn't full 
+        void load(std::ifstream &file);
         
-		//clear list of recently used entities
-		void clear();
+        //clear list of recently used entities
+        void clear();
         
-		//shrink cache data to max size
-		void shrink();
+        //shrink cache data to max size
+        void shrink();
         
         // Returns pointer to the entity specified by its index.
-		std::shared_ptr<const char> operator[] (uint64_t index);
+        std::shared_ptr<const char> operator[] (uint64_t index);
         
-		// Returns pointer to the entity specified by its index.
+        // Returns pointer to the entity specified by its index.
         template<typename T>
-		std::vector<T> getEntity(uint64_t index);
+        std::vector<T> getEntity(uint64_t index);
         
-		// return element by entity ID and her index
+        // return element by entity ID and her index
         template<typename T>
         T getElement(uint64_t entityID, uint64_t index);
 
-		//return element from cache by entity ID and her index
+        //return element from cache by entity ID and her index
         template<typename T>
         T getElementFromMemory(uint64_t entityID, uint64_t index);
 
     private:
 
-		//coverts datatypes
+        //coverts datatypes
         template<typename Tdst, typename Tsrc>
         Tdst convert(Tsrc value);
 
-		//load and save element from file to cache, select by entity ID and her index
+        //load and save element from file to cache, select by entity ID and her index
         template<typename T>
         T getElementFromFile(uint64_t entityID, uint64_t index);
 
-		//delete least used entity
-		void pop();
+        //delete least used entity 
+        void pop(DataTypes dataType);
+
+        //delete least used 8 bit entity
+        void pop8();
+
+        //delete least used 16 bit entity 
+        void pop16();
+
+        //delete least used 32 bit entity 
+        void pop32();
+
+        //delete least used 64 bit entity 
+        void pop64();
         
+        //pull 8 bit entity
+        void pull8(uint64_t index);
+        
+        //pull 16 bit entity
+        void pull16(uint64_t index);
 
-		void pull(uint64_t index);
+        //pull 32 bit entity
+        void pull32(uint64_t index);
+        
+        //pull 64bit entity
+        void pull64(uint64_t index);
 
-		void insert(const uint64_t& index);
+        void insert(const uint64_t& index);
         
     };
 }
