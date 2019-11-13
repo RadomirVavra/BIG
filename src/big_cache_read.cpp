@@ -227,7 +227,7 @@ namespace big
                 std::list<uint64_t>::iterator it = lru_list_8.begin();
                 if (lru_list_8.size() >= 2) {
                     std::next(it);
-                    if (entities_16[lru_list_16.front()].time >= entities_8[*it].time)
+                    if (entities_16[lru_list_16.front()].time <= entities_8[*it].time)
                         pop16();
                     else
                     {
@@ -253,7 +253,7 @@ namespace big
                 std::list<uint64_t>::iterator jt = lru_list_16.begin();
                 if (lru_list_16.size() >= 2) {
                     std::next(jt);
-                    if (entities_32[lru_list_32.front()].time >= entities_16[*jt].time)
+                    if (entities_32[lru_list_32.front()].time <= entities_16[*jt].time)
                         pop32();
                     else
                     {
@@ -281,7 +281,7 @@ namespace big
                 if (lru_list_32.size() >= 2)
                 {
                     std::next(kt);
-                    if (entities_64[lru_list_64.front()].time >= entities_32[*kt].time)
+                    if (entities_64[lru_list_64.front()].time <= entities_32[*kt].time)
                         pop64();
                     else
                     {

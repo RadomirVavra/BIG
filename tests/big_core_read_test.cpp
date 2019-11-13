@@ -2223,6 +2223,52 @@ namespace big_test
 
 
         }
+        //test random read with normal distribution of data read and bigger images tests
+        TEST_METHOD(BigCoreRead_Random_at_with_cache_speed_normal_dist) {
+            uint16_t n = 3 * 20 * 10;
+            uint64_t data_test_size = DATA_TEST_SIZE; //if change this value delete test file or comment if for creating data
+            std::shared_ptr<uint16_t> data1{ new uint16_t[n], [](uint16_t *p) {delete[] p; } };
+            for (uint64_t i = 0; i != n; ++i) data1.get()[i] = i;
+            
+            uint64_t number_of_imadges = data_test_size *11 ;
+            if (!exists_test("testCoreRead_random_at_cache_test3_speed_normal.big"))
+            {
+                big::BigCoreWrite big("testCoreRead_random_at_cache_test3_speed_normal.big", 10, 20, 3);
+                uint64_t j = 0;
+                while (j < number_of_imadges) {
+                    big.pushEntity(data1, big::DataTypes::UINT16_T);
+                    j++;
+                }
+            }
+            big::BigCoreRead big("testCoreRead_random_at_cache_test3_speed_normal.big", false, CACHE_SIZE);
+            Assert::AreEqual(number_of_imadges, big.getNumberOfImages());
+            Assert::AreEqual(10ull, big.getImageHeight());
+            Assert::AreEqual(20ull, big.getImageWidth());
+            Assert::AreEqual(3ull, big.getNumberOfPlanes());
+            
+            std::random_device rd;
+            std::mt19937_64 gen(rd());
+            std::normal_distribution<double> dis(static_cast<double>((number_of_imadges - 12) / 2), DEVIATION);
+            std::uniform_int_distribution<uint64_t> dis1(0, big.getImageHeight() - 1);
+            std::uniform_int_distribution<uint64_t> dis2(0, big.getImageWidth() - 1);
+            std::uniform_int_distribution<uint64_t> dis3(0, big.getNumberOfPlanes() - 1);
+            uint64_t i = 0;
+            while (i < NUMBER_OF_READS)
+            {
+                uint64_t imageNum = std::round(dis(gen));
+                uint64_t rowIndex = dis1(gen);
+                uint64_t colIndex = dis2(gen);
+                uint64_t numberOfPlanes = dis3(gen);
+               
+                auto point = big.at<uint16_t>(imageNum, rowIndex, colIndex, numberOfPlanes);
+                    
+                
+                i++;
+
+            }
+
+
+        }
 
     };
 
