@@ -1932,9 +1932,7 @@ namespace big_test
                 }
                 }
                 i++;
-                if (i == 40000) { // for dubugging, watch if time working
-                    continue;
-                }
+                
 
             }
 

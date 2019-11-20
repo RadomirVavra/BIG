@@ -204,14 +204,14 @@ namespace big
 
     void BigCacheRead::shrink()
     {
-        while (currentSize > maxSize) pop(DataTypes::UINT8_T); // bude mazat jen 8 bitové nejlepší by bylo udìlat pseudonáhodnı vıbìr nebo vlastní funkci a mazat vdy nejstarší
+        while (currentSize > maxSize) pop(DataTypes::UINT8_T); // slow
     }
 
     void BigCacheRead::pop(DataTypes dataType) {
         switch (dataType)
             {
-            case DataTypes::UINT8_T:
-            case DataTypes::INT8_T:
+        case DataTypes::UINT8_T:
+        case DataTypes::INT8_T:
             {
                 if (lru_list_8.size() > 0)
                     pop8();
@@ -403,7 +403,9 @@ namespace big
                 else {
                     time++;
                     entity.time = time;
-                    lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+                    if (lru_list_8.back() != index)
+                        lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it); 
+                    
                 }
                 return entity.data;
             }
@@ -424,7 +426,8 @@ namespace big
                 else {
                     time++;
                     entity.time = time;
-                    lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                    if (lru_list_16.back() != index) 
+                        lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
                 }
                 return entity.data;
             }
@@ -445,7 +448,8 @@ namespace big
                 else {
                     time++;
                     entity.time = time;
-                    lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                    if (lru_list_32.back() != index)
+                        lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
                 }
                 return entity.data;
             }
@@ -466,7 +470,8 @@ namespace big
                 else {
                     time++;
                     entity.time = time;
-                    lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                    if (lru_list_64.back() != index)
+                        lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
                 }
                 return entity.data;
             }
@@ -481,105 +486,7 @@ namespace big
         
         
         
-        //switch (dataTypes[index])
-        //{
-        //case DataTypes::UINT8_T:
-        //case DataTypes::INT8_T:
-        //{
-        //    Entity& entity = entities_8[index];
-        //    std::shared_ptr<char> data;
-        //    if (entity.data == nullptr) {
-        //        if (entitySizes[index] <= maxSize) {
-        //            insert(index);
-        //            data = entity.data;
-        //            
-        //        }
-        //        else {
-        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-        //            file.seekg(dataPositions[index]);
-        //            file.read(data.get(), entitySizes[index]);
-        //           
-        //        }
-        //    }
-        //    else {
-        //        time++;
-        //        entity.time = time;
-        //        lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
-        //    }
-        //   
-        //}
-        //case DataTypes::UINT16_T:
-        //case DataTypes::INT16_T:
-        //case DataTypes::HALF:
-        //{
-        //    Entity& entity = entities_16[index];
-        //    if (entity.data == nullptr) {
-        //        if (entitySizes[index] <= maxSize) { 
-        //            insert(index); 
-        //            data = entity.data;
-        //        }
-        //        else {
-        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-        //            file.seekg(dataPositions[index]);
-        //            file.read(data.get(), entitySizes[index]);
-        //            
-        //        }
-        //    }
-        //    else {
-        //        time++;
-        //        entity.time = time;
-        //        lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
-        //    }
-        //}
-        //case DataTypes::UINT32_T:
-        //case DataTypes::INT32_T:
-        //case DataTypes::FLOAT:
-        //{
-        //    Entity& entity = entities_32[index];
-        //    if (entity.data == nullptr) {
-        //        if (entitySizes[index] <= maxSize)
-        //        {
-        //            insert(index);
-        //            data = entity.data;
-        //        }
-        //        else {
-        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-        //            file.seekg(dataPositions[index]);
-        //            file.read(data.get(), entitySizes[index]);
-        //        }
-        //    }
-        //    else {
-        //        time++;
-        //        entity.time = time;
-        //        lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
-        //    }
-        //   
-        //}
-        //case DataTypes::UINT64_T:
-        //case DataTypes::INT64_T:
-        //case DataTypes::DOUBLE:
-        //{
-        //    Entity& entity = entities_64[index];
-        //    if (entity.data == nullptr) {
-        //        if (entitySizes[index] <= maxSize) {
-        //            insert(index);
-        //            data = entity.data;
-        //        }
-        //        else {
-        //            data = std::shared_ptr<char>(new char[entitySizes[index]], [](char *p) { delete[] p; });
-        //            file.seekg(dataPositions[index]);
-        //            file.read(data.get(), entitySizes[index]);
-        //           
-        //        }
-        //    }
-        //    else {
-        //        time++;
-        //        entity.time = time;
-        //        lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
-        //    }
-        //  
-        //}
-        //}//switch end
+        
 
         std::vector<T> vec;
 
@@ -605,7 +512,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+                if (lru_list_8.back() != index)
+                    lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
             }
             vec.reserve(entitySizes[index]);
             for (uint64_t i = 0; i != entitySizes[index]; ++i) {
@@ -632,7 +540,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                if (lru_list_16.back() != index)
+                 lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -659,7 +568,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                if (lru_list_32.back() != index)
+                    lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -686,7 +596,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                if (lru_list_64.back() != index)
+                    lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -714,7 +625,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+                if (lru_list_8.back() != index)
+                    lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -741,7 +653,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                if (lru_list_16.back() != index)
+                 lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -768,7 +681,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                if (lru_list_32.back() != index)
+                    lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -795,7 +709,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                if (lru_list_64.back() != index)
+                    lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -822,7 +737,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                if (lru_list_16.back() != index)
+                    lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -849,7 +765,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                if (lru_list_32.back() != index)
+                    lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -876,7 +793,8 @@ namespace big
             else {
                 time++;
                 entity.time = time;
-                lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                if (lru_list_64.back() != index)
+                    lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -1033,7 +951,11 @@ namespace big
                 else return getElementFromFile<T>(entityID, index);
             }
             else {
-                if (lru_list_8.back() != entityID) lru_list_8.splice(lru_list_8.end(), lru_list_8, entities_8[entityID].it);
+                time++;
+                entities_8[entityID].time = time;
+                if (lru_list_8.back() != entityID) 
+                    lru_list_8.splice(lru_list_8.end(), lru_list_8, entities_8[entityID].it);
+                
             }
             break;
         case DataTypes::UINT16_T:
@@ -1044,7 +966,10 @@ namespace big
                 else return getElementFromFile<T>(entityID, index);
             }
             else {
-                if (lru_list_16.back() != entityID) lru_list_16.splice(lru_list_16.end(), lru_list_16, entities_16[entityID].it);
+                time++;
+                entities_16[entityID].time = time;
+                if (lru_list_16.back() != entityID)
+                    lru_list_16.splice(lru_list_16.end(), lru_list_16, entities_16[entityID].it);
             }
             break;
         case DataTypes::UINT32_T:
@@ -1055,7 +980,10 @@ namespace big
                 else return getElementFromFile<T>(entityID, index);
             }
             else {
-                if (lru_list_32.back() != entityID) lru_list_32.splice(lru_list_32.end(), lru_list_32, entities_32[entityID].it);
+                time++;
+                entities_32[entityID].time = time;
+                if (lru_list_32.back() != entityID)
+                    lru_list_32.splice(lru_list_32.end(), lru_list_32, entities_32[entityID].it);
             }
             break;
         case DataTypes::UINT64_T:
@@ -1066,7 +994,11 @@ namespace big
                 else return getElementFromFile<T>(entityID, index);
             }
             else {
-                if (lru_list_64.back() != entityID) lru_list_64.splice(lru_list_64.end(), lru_list_64, entities_64[entityID].it);
+                time++;
+                entities_64[entityID].time = time;
+                if (lru_list_64.back() != entityID)
+                    lru_list_64.splice(lru_list_64.end(), lru_list_64, entities_64[entityID].it);
+                
             }
             break;
         }
