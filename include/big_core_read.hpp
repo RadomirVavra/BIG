@@ -57,12 +57,14 @@ namespace big
 
     public:
 
+        //loadToCache methods are not used, in code use only cache.load(file, totalSize)
+        // use only for testing, and cache.load was changed so we can delete this
         // Loads all data into cache, if possible. Does nothing if data are bigger than cache size.
-        void loadToCache() { cache.load(file); }
+        //void loadToCache() { cache.load(file); }
 
         // Sets maximal possible size of cache that can be used and loads all data into cache, if possible.
         // Does nothing if data are bigger than cache size.
-        void loadToCache(uint64_t bytes) { cache.setSize(bytes); cache.load(file); }
+        //void loadToCache(uint64_t bytes) { cache.setSize(bytes); cache.load(file); }
 
         // Releases all memory allocated by cache.
         void clearCache() { cache.clear(); }

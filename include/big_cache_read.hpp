@@ -54,8 +54,8 @@ namespace big
         //return size of used memoryy
         uint64_t getSize();
 
-        //load data until cache isn't full 
-        void load(std::ifstream &file);
+        //load data until cache isn't full, totalSize = size all data in file
+        void load(std::ifstream &file, uint64_t & totalSize);
         
         //clear list of recently used entities
         void clear();

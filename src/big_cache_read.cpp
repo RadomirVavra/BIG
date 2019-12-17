@@ -155,10 +155,10 @@ namespace big
         entities_32.resize(entitySizes.size());
         entities_64.resize(entitySizes.size());
     }
-    void BigCacheRead::load(std::ifstream &file)
+    void BigCacheRead::load(std::ifstream &file, uint64_t & totalSize)
     {
-        uint64_t totalSize = 0;
-        for (const auto & entitySize : entitySizes) totalSize += entitySize;
+        
+        
         if (totalSize <= maxSize) {
             for (uint64_t index = 0; index != entities_8.size(); ++index) {
                 switch (dataTypes[index])
@@ -241,7 +241,7 @@ namespace big
                 pop(DataTypes::UINT8_T);
             }
             else
-                pop(DataTypes::UINT16_T);
+                pop(DataTypes::UINT32_T);
                 
                 break;
             }
@@ -514,6 +514,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_8.back() != index)
                     lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index]);
             for (uint64_t i = 0; i != entitySizes[index]; ++i) {
@@ -542,6 +543,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_16.back() != index)
                  lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -570,6 +572,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_32.back() != index)
                     lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -598,6 +601,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_64.back() != index)
                     lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -627,6 +631,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_8.back() != index)
                     lru_list_8.splice(lru_list_8.end(), lru_list_8, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -655,6 +660,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_16.back() != index)
                  lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -683,6 +689,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_32.back() != index)
                     lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -711,6 +718,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_64.back() != index)
                     lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -739,6 +747,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_16.back() != index)
                     lru_list_16.splice(lru_list_16.end(), lru_list_16, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -767,6 +776,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_32.back() != index)
                     lru_list_32.splice(lru_list_32.end(), lru_list_32, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {
@@ -795,6 +805,7 @@ namespace big
                 entity.time = time;
                 if (lru_list_64.back() != index)
                     lru_list_64.splice(lru_list_64.end(), lru_list_64, entity.it);
+                data = entity.data;
             }
             vec.reserve(entitySizes[index] / 2);
             for (uint64_t i = 0; i != entitySizes[index] / 2; ++i) {

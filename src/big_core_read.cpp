@@ -9,7 +9,10 @@ namespace big
         : BigCoreReadInfo(fileName), cache(file, entitySizes, dataPositions, entityDataTypes)
     {
         cache.setSize(cacheSizeBytes);
-        if (loadToCache) cache.load(file);
+        uint64_t totalSize = 0;
+        for (const auto & entitySize : entitySizes) totalSize += entitySize;        if (loadToCache || totalSize <= cacheSizeBytes) { //if we change to and &&, fix problem when user want load to cache but cache it to small and this slow algorithm
+          cache.load(file, totalSize);
+        }
     }
 
     template<typename T>
