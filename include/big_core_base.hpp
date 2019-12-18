@@ -119,6 +119,8 @@ namespace big
         uint64_t imageHeight = 0;
         uint64_t imageWidth = 0;
         uint64_t numberOfPlanes = 1;
+        std::string fileName;
+
         std::vector<ChunkIds> dataOrder = defaultDataOrder;
         std::vector<DataTypes> dataType;
 

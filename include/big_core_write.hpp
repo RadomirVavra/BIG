@@ -49,6 +49,8 @@ namespace big
         // Write chunk's id, length and data.
         bool writeChunk(ChunkIds id);
 
+        std::string remove_extension(const std::string& filename);
+
     protected:
 
         std::ofstream file;             // attached file

@@ -11,6 +11,7 @@ namespace big
         this->imageWidth = imageWidth;
         this->numberOfPlanes = numberOfPlanes;
         this->dataOrder = dataOrder;
+        this->fileName = remove_extension(fileName);
 
         // prepare supporting structures
         initSupportingStructures();
@@ -152,6 +153,17 @@ namespace big
             file.write(reinterpret_cast<const char*>(&zero), length - l);
             break;
         }
+        case ChunkIds::XML:
+        {
+          std::string xmlFileName = fileName + ".xml";
+          uint64_t l = sizeof(xmlFileName);
+          uint64_t length = l + (l % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0);
+          file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
+          file.write(reinterpret_cast<const char*>(&length), sizeof(length));
+          file.write(reinterpret_cast<const char*>(&xmlFileName), sizeof(std::string));
+          file.write(reinterpret_cast<const char*>(&zero), length - l);
+          break;
+        }
       /*  case ChunkIds::DATA_TYPE:
         {
             file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
@@ -166,5 +178,12 @@ namespace big
         }*/
         }
         return !file.fail();
+    }
+    std::string BigCoreWrite::remove_extension(const std::string& fileName) {
+      
+      size_t lastdot = fileName.find_last_of(".");
+      if (lastdot == std::string::npos) return fileName;
+      return fileName.substr(0, lastdot);
+      
     }
 }

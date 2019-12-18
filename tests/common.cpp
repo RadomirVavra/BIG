@@ -20,6 +20,16 @@ namespace big_test
             file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
             Assert::AreEqual(d, number);
         }
+        uint64_t n_chunk;
+        file.read(reinterpret_cast<char*>(&n_chunk), big::CHUNK_LENGTH);
+        Assert::AreEqual(n_chunk,7ull);
+        uint64_t length;
+        file.read(reinterpret_cast<char*>(&length), big::CHUNK_LENGTH);
+        std::string fileName;
+        file.read(reinterpret_cast<char*>(&fileName), length);
+        std::string  correctName = "testCoreWrite_Constructor1.xml";
+        Assert::AreEqual(fileName, correctName);
+
     }
     template<typename T>
     void checkAtandGet(big::BigCoreRead &big, std::shared_ptr<T> data, uint64_t imageNum, uint64_t row, uint64_t col, uint64_t plane, uint64_t n)
