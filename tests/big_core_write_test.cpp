@@ -27,7 +27,7 @@ namespace big_test
                     std::ifstream file("testCoreWrite_Constructor1.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4};//, 6, 8, 1 
-                    checkMetaData(file, metaData);
+                    checkMetaData(file, metaData, "testCoreWrite_Constructor1.xml");
                 }
             }
             {
@@ -38,7 +38,7 @@ namespace big_test
                     std::ifstream file("testCoreWrite_Constructor2.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1
-                    checkMetaData(file, metaData);
+                    checkMetaData(file, metaData,"testCoreWrite_Constructor2.xml");
                 }
             }
             {
@@ -51,7 +51,7 @@ namespace big_test
                     std::ifstream file("testCoreWrite_Constructor3.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 2, 3, 4, 1 };//, 6, 8, 2
-                    checkMetaData(file, metaData);
+                    checkMetaData(file, metaData, "testCoreWrite_Constructor3.xml");
                 }
             }
         }

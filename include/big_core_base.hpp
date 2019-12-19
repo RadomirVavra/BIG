@@ -47,6 +47,9 @@ namespace big
         // Returns number of (color) planes.
         uint64_t getNumberOfPlanes() { return numberOfPlanes; }
 
+        // Returns name of XML file
+        std::string getXMLFileName() { return fileName; }
+
         // Returns order in which the data are serialized into memory.
         const std::vector<ChunkIds>& getDataOrder() { return dataOrder; }
 

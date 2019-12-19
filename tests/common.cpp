@@ -12,7 +12,28 @@ namespace big_test
         file.read(&header[0], big::CHUNK_LENGTH);
         Assert::AreEqual(big::MAGIC, header);
     }
+    //check metadata and xml filename
+    void checkMetaData(std::ifstream &file, const std::vector<uint64_t> &metaData, std::string correctName)
+    {
+      for (const auto & d : metaData) {
+        uint64_t number;
+        file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
+        Assert::AreEqual(d, number);
+      }
 
+      //check xml filename
+      uint64_t n_chunk;
+      file.read(reinterpret_cast<char*>(&n_chunk), big::CHUNK_LENGTH);
+      Assert::AreEqual(n_chunk, 7ull);
+      uint64_t length;
+      file.read(reinterpret_cast<char*>(&length), big::CHUNK_LENGTH);
+      std::string fileName;
+      fileName.resize(length);
+      file.read(reinterpret_cast<char*>(&fileName[0]), length);
+      fileName.resize(fileName.find_first_of('\0')); //resize string to \0 end symbol
+      Assert::AreEqual(fileName, correctName);
+
+    }
     void checkMetaData(std::ifstream &file, const std::vector<uint64_t> &metaData)
     {
         for (const auto & d : metaData) {
@@ -20,15 +41,6 @@ namespace big_test
             file.read(reinterpret_cast<char*>(&number), big::CHUNK_LENGTH);
             Assert::AreEqual(d, number);
         }
-        uint64_t n_chunk;
-        file.read(reinterpret_cast<char*>(&n_chunk), big::CHUNK_LENGTH);
-        Assert::AreEqual(n_chunk,7ull);
-        uint64_t length;
-        file.read(reinterpret_cast<char*>(&length), big::CHUNK_LENGTH);
-        std::string fileName;
-        file.read(reinterpret_cast<char*>(&fileName), length);
-        std::string  correctName = "testCoreWrite_Constructor1.xml";
-        Assert::AreEqual(fileName, correctName);
 
     }
     template<typename T>

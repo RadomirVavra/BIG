@@ -1,6 +1,7 @@
 #include "common.hpp"
 
 #include "../include/big_core_read_info.hpp"
+#include "../include/big_core_write.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -101,6 +102,17 @@ namespace big_test
                     }
                     
                 }
+            }
+            {
+              big::BigCoreWrite big("testCoreReadInfo_Constructor4.big", 2, 4);
+            }
+            {
+              big::BigCoreReadInfo big("testCoreReadInfo_Constructor4.big");
+              Assert::AreEqual(0ull, big.getNumberOfImages());
+              Assert::AreEqual(2ull, big.getImageHeight());
+              Assert::AreEqual(4ull, big.getImageWidth());
+              Assert::AreEqual(1ull, big.getNumberOfPlanes());
+              Assert::AreEqual("testCoreReadInfo_Constructor4.xml", big.getXMLFileName().c_str());
             }
         }
     };

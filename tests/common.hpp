@@ -30,7 +30,7 @@ namespace big_test
     void checkHeader(std::ifstream &file);
 
     void checkMetaData(std::ifstream &file, const std::vector<uint64_t> &metaData);
-    
+    void checkMetaData(std::ifstream &file, const std::vector<uint64_t> &metaData, std::string correctName);
 
     template <typename T>
     void checkData(std::ifstream &file, std::shared_ptr<T> data, uint64_t n, uint64_t index, uint64_t dataType);

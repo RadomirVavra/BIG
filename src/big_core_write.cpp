@@ -160,7 +160,7 @@ namespace big
           uint64_t length = l + (l % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0);
           file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
           file.write(reinterpret_cast<const char*>(&length), sizeof(length));
-          file.write(reinterpret_cast<const char*>(&xmlFileName), sizeof(std::string));
+          file.write(reinterpret_cast<const char*>(&xmlFileName[0]), sizeof(xmlFileName));
           file.write(reinterpret_cast<const char*>(&zero), length - l);
           break;
         }
