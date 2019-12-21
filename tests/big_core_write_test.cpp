@@ -183,5 +183,50 @@ namespace big_test
                 }
             }
         }
+        TEST_METHOD(BigCoreWrite_XMLFile)
+        {
+          
+            {
+              big::BigCoreWrite big("testCoreWrite_XMLWrite1.big", 2, 4);
+
+              Assert::AreEqual(0ull, big.getNumberOfImages());
+              Assert::AreEqual(2ull, big.getImageHeight());
+              Assert::AreEqual(4ull, big.getImageWidth());
+              Assert::AreEqual(1ull, big.getNumberOfPlanes());
+              big.AddAttributeToXmlInt("opacity", 20, "opacity of this material");
+              big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
+              big.AddAttributeToXmlBool("isDark", false, "is this material dark");
+              Assert::AreEqual(big.RemoveNodesByName("opacity"), true);
+              Assert::AreEqual(big.RemoveNodesByName("isDark"), true);
+              big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
+            }
+            {
+              std::ifstream file("testCoreWrite_Constructor1.big", std::ios_base::binary | std::ios_base::in);
+              checkHeader(file);
+              std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1 
+              checkMetaData(file, metaData, "testCoreWrite_Constructor1.xml");
+            }
+            {
+              big::BigCoreWrite big("testCoreWrite_XMLWrite2.big", 2, 4);
+
+              Assert::AreEqual(0ull, big.getNumberOfImages());
+              Assert::AreEqual(2ull, big.getImageHeight());
+              Assert::AreEqual(4ull, big.getImageWidth());
+              Assert::AreEqual(1ull, big.getNumberOfPlanes());
+              big.AddAttributeToXmlInt("opacity", 20, "opacity of this material");
+              big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
+              big.AddAttributeToXmlBool("isDark", false, "is this material dark");
+              big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
+              big.RemoveAllNodes();
+            }
+            {
+              std::ifstream file("testCoreWrite_Constructor1.big", std::ios_base::binary | std::ios_base::in);
+              checkHeader(file);
+              std::vector<uint64_t> metaData{ 1, 8, 0, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4 };//, 6, 8, 1 
+              checkMetaData(file, metaData, "testCoreWrite_Constructor1.xml");
+            }
+         
+        }
+         
     };
 }

@@ -103,10 +103,10 @@ namespace big
           break;
         }
         case ChunkIds::XML: {
-          //check xml filename
-          fileName.resize(length);
-          file.read(reinterpret_cast<char*>(&fileName[0]), length);
-          fileName.resize(fileName.find_first_of('\0')); //resize string to \0 end symbol
+          //read xml filename
+          xmlFileName.resize(length);
+          file.read(reinterpret_cast<char*>(&xmlFileName[0]), length);
+          xmlFileName.resize(xmlFileName.find_first_of('\0')); //resize string to \0 end symbol
           break;
         }
         default:

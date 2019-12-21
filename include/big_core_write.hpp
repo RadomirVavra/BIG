@@ -4,6 +4,7 @@
 
 #include "big_core_base.hpp"
 #include "half.hpp"
+#include "pugixml.hpp"
 
 #include <fstream>
 #include <memory>
@@ -34,6 +35,9 @@ namespace big
         // Move-assignment operator.
         BigCoreWrite &operator=(BigCoreWrite &&rhs) = default;
 
+      
+        
+
     public:
 
         // Adds an entity to the container and writes it to the file, to selected index
@@ -44,16 +48,43 @@ namespace big
         template<typename T>
         void pushEntity(std::shared_ptr<T> data, DataTypes dataType);
 
+        //Add int atribute to xml
+        void AddAttributeToXmlInt(std::string nameOfAtribute, int  in_intVal, std::string hint);
+
+        //Add bool atribute to xml
+        void AddAttributeToXmlBool(std::string nameOfAtribute, bool in_boolVal, std::string hint);
+
+        //Add  double to xml
+        void AddAttributeToXmlDouble(std::string nameOfAtribute, double in_doubleVal, std::string hint);
+
+        //remove all nodes with this name
+        bool RemoveNodesByName(std::string nameOfAtribute);
+
+        //remove first node with this name
+        bool RemoveNodeByName(std::string nameOfAtribute);
+
+        //remove all child nodes of myRoot
+        void RemoveAllNodes();
+
     protected:
 
         // Write chunk's id, length and data.
         bool writeChunk(ChunkIds id);
+
+        //create xml document
+        void createXMLFile();
+
+        //check if file exist
+        inline bool file_exist(const std::string&name);
+
+      
 
         std::string remove_extension(const std::string& filename);
 
     protected:
 
         std::ofstream file;             // attached file
+        pugi::xml_document doc;         //XML file
     };
 
 }
