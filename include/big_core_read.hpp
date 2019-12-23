@@ -4,6 +4,7 @@
 
 #include "big_core_read_info.hpp"
 #include "big_cache_read.hpp"
+#include "pugixml.hpp"
 
 #include <fstream>
 #include <array>
@@ -55,6 +56,8 @@ namespace big
         template<typename T>
         std::vector<T> getImage(uint64_t imageNum);
 
+       
+
     public:
 
         //loadToCache methods are not used, in code use only cache.load(file, totalSize)
@@ -83,6 +86,16 @@ namespace big
 
         // Returns true if all data are in cache.
         bool isAllInCache() { return cache.getSize() == dataSize; }
+
+        //xml read atributes
+        int readXMLInt(std::string nameOfNode);
+
+        //xml read atributes
+        double readXMLDouble(std::string nameOfNode);
+
+        //xml read atributes
+        bool readXMLBool(std::string nameOfNode);
+        
 
     protected:
         BigCacheRead cache;

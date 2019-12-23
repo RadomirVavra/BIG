@@ -2268,6 +2268,30 @@ namespace big_test
 
         }
 
+        TEST_METHOD(BigCoreRead_XML)
+        {
+          {
+            big::BigCoreWrite big("testCoreRead_XMLread.big", 2, 4);
+
+            Assert::AreEqual(0ull, big.getNumberOfImages());
+            Assert::AreEqual(2ull, big.getImageHeight());
+            Assert::AreEqual(4ull, big.getImageWidth());
+            Assert::AreEqual(1ull, big.getNumberOfPlanes());
+            big.AddAttributeToXmlInt("opacity", 20, "opacity of this material");
+            big.AddAttributeToXmlDouble("luminance", 21.15, "opacity of this material");
+            big.AddAttributeToXmlBool("isDark", false, "is this material dark");
+            
+          }
+          {
+            big::BigCoreRead big("testCoreRead_XMLread.big", false, CACHE_SIZE);
+            Assert::AreEqual(big.readXMLInt("opacity"), 20);
+            Assert::AreEqual(big.readXMLDouble("luminance"), 21.15);
+            Assert::AreEqual(big.readXMLBool("isDark"), false);
+           
+          }
+        }
+
+
     };
 
     

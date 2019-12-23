@@ -84,7 +84,7 @@ namespace big
     protected:
 
         std::ofstream file;             // attached file
-        pugi::xml_document doc;         //XML file
+       
     };
 
 }
