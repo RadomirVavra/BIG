@@ -15,7 +15,9 @@ namespace Microsoft {
             using half_float::half;
             using half_float::half_cast;
             template<> inline std::wstring ToString<uint16_t>(const uint16_t& t) { RETURN_WIDE_STRING(t); }
+#if (_MSC_VER <= 1500)
             template<> inline std::wstring ToString<int64_t>(const int64_t& t) { RETURN_WIDE_STRING(t); }
+#endif
             template<> inline std::wstring ToString<half>(const half & t) { RETURN_WIDE_STRING(t); }
             template<> inline std::wstring ToString<big::ChunkIds>(const big::ChunkIds& t) { RETURN_WIDE_STRING(static_cast<uint64_t>(t)); }
             template<> inline std::wstring ToString<big::DataTypes>(const big::DataTypes& t) { RETURN_WIDE_STRING(static_cast<uint64_t>(t)); }
