@@ -58,6 +58,9 @@ namespace big
         //Add  double to xml
         void AddAttributeToXmlDouble(std::string nameOfAtribute, double in_doubleVal, std::string hint);
 
+        //Add  string to xml
+        void AddAttributeToXmlString(std::string nameOfAtribute, std::string in_stringVal, std::string hint);
+
         //Get XML string from root node
         std::string GetXMLString();
 

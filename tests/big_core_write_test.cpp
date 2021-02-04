@@ -199,6 +199,7 @@ namespace big_test
               Assert::AreEqual(big.RemoveNodesByName("opacity"), true);
               Assert::AreEqual(big.RemoveNodesByName("isDark"), true);
               big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
+              big.AddAttributeToXmlString("data", "uniform", "Data are uniform");
             }
             {
               std::ifstream file("testCoreWrite_Constructor1.big", std::ios_base::binary | std::ios_base::in);
@@ -217,6 +218,7 @@ namespace big_test
               big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
               big.AddAttributeToXmlBool("isDark", false, "is this material dark");
               big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
+              big.AddAttributeToXmlString("data", "uniform", "Data are uniform");
               std::string document = big.GetXMLString();
               big.RemoveAllNodes();
             }

@@ -297,6 +297,23 @@ namespace big
         throw "Xml save error";
     }
 
+    void BigCoreWrite::AddAttributeToXmlString(std::string nameOfAtribute, std::string in_stringVal, std::string hint) {
+      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
+      if (!result)
+      {
+        throw "Parse error , character pos= " + result.offset;
+      }
+      pugi::xml_node root = doc.document_element();
+
+      pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
+      nodeChild.append_attribute("hint") = hint.c_str();
+      nodeChild.append_attribute("stringVal") = in_stringVal.c_str();
+      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+      if (!saveSucceeded)
+        throw "Xml save error";
+    }
+
+
     bool BigCoreWrite::RemoveNodesByName(std::string nameOfAtribute) {
       doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
       pugi::xml_node root = doc.document_element();
