@@ -39,6 +39,7 @@ namespace big
         file.seekp(CHUNK_LENGTH);
         if (!writeChunk(ChunkIds::NUMBER_OF_IMAGES)) throw "Error while writing file!";
         file.seekp(0, std::ios_base::end);
+        if (!writeChunk(ChunkIds::XML)) throw "Error while writing file!";
         if (file.is_open()) file.close();
     }
 
@@ -158,12 +159,12 @@ namespace big
         }
         case ChunkIds::XML:
         {
-          xmlFileName = fileName + ".xml";
-          uint64_t l = (xmlFileName.size() + 1) * sizeof(char);
+          std::string xmlFile = GetXMLString(); 
+          uint64_t l = (xmlFile.size() + 1) * sizeof(char);
           uint64_t length = l + (l % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0);
           file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
           file.write(reinterpret_cast<const char*>(&length), sizeof(length));
-          file.write(reinterpret_cast<const char*>(&xmlFileName[0]), l);
+          file.write(reinterpret_cast<const char*>(&xmlFile[0]), l);
           file.write(reinterpret_cast<const char*>(&zero), length - l);
           break;
         }
@@ -201,9 +202,9 @@ namespace big
         // Save XML tree to file.
         // Remark: second optional param is indent string to be used;
         // default indentation is tab character.
-        bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-        if (!saveSucceeded)
-          throw "Xml save error";
+        //bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+        //if (!saveSucceeded)
+          //throw "Xml save error";
       }
      
      
@@ -246,11 +247,11 @@ namespace big
     }
 
     void BigCoreWrite::AddAttributeToXmlInt(std::string nameOfAtribute, int  in_intVal, std::string hint) {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
+      /*pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
       if (!result)
       {
         throw "Parse error , character pos= " + result.offset;
-      }
+      }*/
       // A valid XML document must have a single root node
       pugi::xml_node root = doc.document_element();
       /// [load xml file]
@@ -260,62 +261,62 @@ namespace big
       pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
       nodeChild.append_attribute("hint") = hint.c_str();
       nodeChild.append_attribute("intVal") = in_intVal;
-      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
       if (!saveSucceeded)
-        throw "Xml save error";
+        throw "Xml save error";*/
     }
 
     void BigCoreWrite::AddAttributeToXmlBool(std::string nameOfAtribute, bool  in_boolVal, std::string hint) {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
+     /* pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
       if (!result)
       {
         throw "Parse error , character pos= " + result.offset;
-      }
+      }*/
       pugi::xml_node root = doc.document_element();
 
       pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
       nodeChild.append_attribute("hint") = hint.c_str();
       nodeChild.append_attribute("boolVal") = in_boolVal;
-      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+    /*  bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
       if (!saveSucceeded)
-        throw "Xml save error";
+        throw "Xml save error";*/
     }
 
     void BigCoreWrite::AddAttributeToXmlDouble(std::string nameOfAtribute, double in_doubleVal, std::string hint) {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
+     /* pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
       if (!result)
       {
         throw "Parse error , character pos= " + result.offset;
-      }
+      }*/
       pugi::xml_node root = doc.document_element();
 
       pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
       nodeChild.append_attribute("hint") = hint.c_str();
       nodeChild.append_attribute("doubleVal") = in_doubleVal;
-      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
       if (!saveSucceeded)
-        throw "Xml save error";
+        throw "Xml save error";*/
     }
 
     void BigCoreWrite::AddAttributeToXmlString(std::string nameOfAtribute, std::string in_stringVal, std::string hint) {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
+     /* pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
       if (!result)
       {
         throw "Parse error , character pos= " + result.offset;
-      }
+      }*/
       pugi::xml_node root = doc.document_element();
 
       pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
       nodeChild.append_attribute("hint") = hint.c_str();
       nodeChild.append_attribute("stringVal") = in_stringVal.c_str();
-      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+      /*bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
       if (!saveSucceeded)
-        throw "Xml save error";
+        throw "Xml save error";*/
     }
 
 
     bool BigCoreWrite::RemoveNodesByName(std::string nameOfAtribute) {
-      doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
+      //doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
       pugi::xml_node root = doc.document_element();
 
       bool deleted = false;
@@ -323,9 +324,9 @@ namespace big
       {
         deleted= true;
       }
-      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
       if (!saveSucceeded)
-        throw "Xml save error";
+        throw "Xml save error";*/
       /// [r
       return deleted;
     }
@@ -338,9 +339,9 @@ namespace big
       {
         deleted = true;
       }
-      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
       if (!saveSucceeded)
-        throw "Xml save error";
+        throw "Xml save error";*/
       /// [r
       return deleted;
     }
@@ -357,8 +358,8 @@ namespace big
 
         child = next;
       }
-      bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
+      /*bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
       if (!saveSucceeded)
-        throw "Xml save error";
+        throw "Xml save error";*/
     }
 }

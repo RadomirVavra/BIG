@@ -22,16 +22,16 @@ namespace big_test
       }
 
       //check xml filename
-      uint64_t n_chunk;
-      file.read(reinterpret_cast<char*>(&n_chunk), big::CHUNK_LENGTH);
-      Assert::AreEqual(n_chunk, 7ull);
-      uint64_t length;
-      file.read(reinterpret_cast<char*>(&length), big::CHUNK_LENGTH);
-      std::string fileName;
-      fileName.resize(length);
-      file.read(reinterpret_cast<char*>(&fileName[0]), length);
-      fileName.resize(fileName.find_first_of('\0')); //resize string to \0 end symbol
-      Assert::AreEqual(fileName, correctName);
+      //uint64_t n_chunk;
+      //file.read(reinterpret_cast<char*>(&n_chunk), big::CHUNK_LENGTH);
+      //Assert::AreEqual(n_chunk, 7ull);
+      //uint64_t length;
+      //file.read(reinterpret_cast<char*>(&length), big::CHUNK_LENGTH);
+      //std::string fileName;
+      //fileName.resize(length);
+      //file.read(reinterpret_cast<char*>(&fileName[0]), length);
+      //fileName.resize(fileName.find_first_of('\0')); //resize string to \0 end symbol
+      //Assert::AreEqual(fileName, correctName);
 
     }
     void checkMetaData(std::ifstream &file, const std::vector<uint64_t> &metaData)

@@ -107,6 +107,7 @@ namespace big
           xmlFileName.resize(length);
           file.read(reinterpret_cast<char*>(&xmlFileName[0]), length);
           xmlFileName.resize(xmlFileName.find_first_of('\0')); //resize string to \0 end symbol
+          doc.load_string(xmlFileName.c_str());
           break;
         }
         default:

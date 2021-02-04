@@ -200,11 +200,6 @@ namespace big
 
     int BigCoreRead::readXMLInt(std::string nameOfNode)
     {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }
       pugi::xml_node root = doc.document_element();
 
       return root.child(nameOfNode.c_str()).attribute("intVal").as_int();
@@ -212,22 +207,13 @@ namespace big
 
     double BigCoreRead::readXMLDouble(std::string nameOfNode)
     {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }
       pugi::xml_node root = doc.document_element();
 
       return root.child(nameOfNode.c_str()).attribute("doubleVal").as_double();
     }
     bool BigCoreRead::readXMLBool(std::string nameOfNode)
     {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }
+     
       pugi::xml_node root = doc.document_element();
 
       return root.child(nameOfNode.c_str()).attribute("boolVal").as_bool();
@@ -236,11 +222,6 @@ namespace big
 
     std::string BigCoreRead::readXMLString(std::string nameOfNode)
     {
-      pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }
       pugi::xml_node root = doc.document_element();
 
       return root.child(nameOfNode.c_str()).attribute("stringVal").as_string();
