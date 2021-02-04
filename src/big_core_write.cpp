@@ -159,11 +159,11 @@ namespace big
         case ChunkIds::XML:
         {
           xmlFileName = fileName + ".xml";
-          uint64_t l = sizeof(xmlFileName);
+          uint64_t l = (xmlFileName.size() + 1) * sizeof(char);
           uint64_t length = l + (l % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0);
           file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
           file.write(reinterpret_cast<const char*>(&length), sizeof(length));
-          file.write(reinterpret_cast<const char*>(&xmlFileName[0]), sizeof(xmlFileName));
+          file.write(reinterpret_cast<const char*>(&xmlFileName[0]), l);
           file.write(reinterpret_cast<const char*>(&zero), length - l);
           break;
         }
@@ -207,6 +207,31 @@ namespace big
       }
      
      
+    }
+
+    //write xml to string write
+    struct xml_string_writer : pugi::xml_writer
+    {
+      std::string result;
+
+      virtual void write(const void* data, size_t size)
+      {
+        result.append(static_cast<const char*>(data), size);
+      }
+    };
+
+    //xml node to string
+    std::string node_to_string(pugi::xml_node node)
+    {
+      xml_string_writer writer;
+      node.print(writer);
+
+      return writer.result;
+    }
+
+    //get string with XML document
+    std::string BigCoreWrite::GetXMLString() {
+      return node_to_string(doc.document_element());
     }
 
     //check if the file exist

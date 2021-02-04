@@ -70,7 +70,7 @@ namespace big_test
                     std::ifstream file("testCoreWrite_AddEntity1.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 1, 2, 8, 2, 3, 8, 4, 4, 8, 1, 5, 32, 1, 2, 3, 4 }; // 6, 8, 1 old datatype
-                    checkMetaData(file, metaData);
+                    checkMetaData(file, metaData, "testCoreWrite_AddEntity1.xml");
                     checkData(file, data, n, 0, (uint64_t) 1); //1 = UINT8_T dataType
                 }
             }
@@ -89,7 +89,7 @@ namespace big_test
                     std::ifstream file("testCoreWrite_AddEntity2.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 2, 2, 8, 3, 3, 8, 5, 4, 8, 3, 5, 32, 1, 2, 3, 4 }; // 6, 8, 1 old datatype
-                    checkMetaData(file, metaData);
+                    checkMetaData(file, metaData, "testCoreWrite_AddEntity2.xml");
                     checkData(file, data1, n, 0, (uint64_t) 1); //1 = UINT8_T dataType
                     checkData(file, data2, n, 1, (uint64_t) 1); //1 = UINT8_T dataType
                 }
@@ -114,7 +114,7 @@ namespace big_test
                     std::ifstream file("testCoreWrite_AddEntity3.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 3, 2, 8, 2, 3, 8, 3, 4, 8, 5, 5, 32, 1, 2, 3, 4 }; //6, 8, 2 old datatype
-                    checkMetaData(file, metaData);
+                    checkMetaData(file, metaData, "testCoreWrite_AddEntity3.xml");
                     checkData(file, data1, n, 0, (uint64_t) 2); //2 = UINT16_T dataType
                     checkData(file, data2, n, 1, (uint64_t) 2); 
                     checkData(file, data3, n, 2, (uint64_t) 2);
@@ -168,7 +168,7 @@ namespace big_test
                     std::ifstream file("testCoreWrite_AddEntity4.big", std::ios_base::binary | std::ios_base::in);
                     checkHeader(file);
                     std::vector<uint64_t> metaData{ 1, 8, 11, 2, 8, 2, 3, 8, 3, 4, 8, 5, 5, 32, 1, 2, 3, 4 }; //6, 8, 2 old datatype
-                    checkMetaData(file, metaData);
+                    checkMetaData(file, metaData, "testCoreWrite_AddEntity4.xml");
                     checkData(file, data1, n, 0, (uint64_t)2); //2 = UINT16_T dataType
                     checkData(file, data2, n, 1, (uint64_t)1); //1 = UINT8_T dataType
                     checkData(file, data3, n, 2, (uint64_t)3); //3 = UINT32_T dataType
@@ -217,6 +217,7 @@ namespace big_test
               big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
               big.AddAttributeToXmlBool("isDark", false, "is this material dark");
               big.AddAttributeToXmlDouble("opacity", 21.15, "opacity of this material");
+              std::string document = big.GetXMLString();
               big.RemoveAllNodes();
             }
             {

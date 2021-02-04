@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <memory>
+#include <string>
 
 
 namespace big
@@ -56,6 +57,9 @@ namespace big
 
         //Add  double to xml
         void AddAttributeToXmlDouble(std::string nameOfAtribute, double in_doubleVal, std::string hint);
+
+        //Get XML string from root node
+        std::string GetXMLString();
 
         //remove all nodes with this name
         bool RemoveNodesByName(std::string nameOfAtribute);
