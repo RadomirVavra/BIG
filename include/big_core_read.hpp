@@ -95,6 +95,9 @@ namespace big
 
         //xml read atributes
         bool readXMLBool(std::string nameOfNode);
+
+        //xml read atributes String
+        std::string readXMLString(std::string nameOfNode);
         
 
     protected:

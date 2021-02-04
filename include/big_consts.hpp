@@ -31,7 +31,7 @@ namespace big
     };
 
     // core chunk ids in vector
-    const std::vector<ChunkIds> CoreChunkIds = { ChunkIds::NUMBER_OF_IMAGES, ChunkIds::IMAGE_HEIGHT, ChunkIds::IMAGE_WIDTH, ChunkIds::NUMBER_OF_PLANES, ChunkIds::DATA_ORDER, ChunkIds::XML, ChunkIds::DATA };
+    const std::vector<ChunkIds> CoreChunkIds = { ChunkIds::NUMBER_OF_IMAGES, ChunkIds::IMAGE_HEIGHT, ChunkIds::IMAGE_WIDTH, ChunkIds::NUMBER_OF_PLANES, ChunkIds::DATA_ORDER, ChunkIds::DATA }; //ChunkIds::XML,
 
     // data order ids
     //enum class DataOrderIds : uint64_t
