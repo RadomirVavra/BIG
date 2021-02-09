@@ -1,5 +1,10 @@
 #pragma once
 #ifndef _BIG_CONSTS_H_
+#ifdef _BIG_CONSTS_H_
+#define BIGDLL  __declspec(dllexport)  
+#else
+#define BIGDLL  __declspec(dllimport)   
+#endif
 #define _BIG_CONSTS_H_
 
 #include <cstdint>
@@ -13,7 +18,7 @@ namespace big
     const uint64_t DEFAULT_CACHE_SIZE = 1024ull * 1024ull * 1024ull;
 
     // length of chunk
-    const uint64_t CHUNK_LENGTH = 8;
+    const  uint64_t CHUNK_LENGTH = 8;
 
     // big magic number
     const std::string MAGIC = { 0x42, 0x49, 0x47, 0x00, 0x00, 0x00, 0x00, 0x00 };

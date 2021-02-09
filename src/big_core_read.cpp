@@ -186,6 +186,11 @@ namespace big
 
     }
 
+    bool BigCoreRead::isAllInCache()
+    { 
+      return cache.getSize() == dataSize; 
+    }
+
     template std::vector<uint8_t> BigCoreRead::getImage(uint64_t imageNum);
     template std::vector<uint16_t> BigCoreRead::getImage(uint64_t imageNum);
     template std::vector<uint32_t> BigCoreRead::getImage(uint64_t imageNum);

@@ -2,6 +2,10 @@
 
 namespace big
 {
+    //constructor
+    BigCoreBase::BigCoreBase(){}
+
+    BigCoreBase::~BigCoreBase(){}
 
     uint64_t BigCoreBase::getDimension(uint64_t index)
     {
