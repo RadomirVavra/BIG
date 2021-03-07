@@ -2287,7 +2287,8 @@ namespace big_test
             Assert::AreEqual(big.readXMLInt("opacity"), 20);
             Assert::AreEqual(big.readXMLDouble("luminance"), 21.15);
             Assert::AreEqual(big.readXMLBool("isDark"), false);
-           
+            std::vector<std::string> params = big.readXMLParameters();
+            Assert::AreEqual(int(params.size()), 3);
           }
         }
 

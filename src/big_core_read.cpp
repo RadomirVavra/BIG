@@ -226,4 +226,13 @@ namespace big
 
       return root.child(nameOfNode.c_str()).attribute("stringVal").as_string();
     }
+
+    std::vector<std::string> BigCoreRead::readXMLParameters() {
+        std::vector<std::string> params;
+        pugi::xml_node root = doc.document_element();
+        for (pugi::xml_node r : root) {
+            params.push_back(r.name());
+        }
+        return params;
+    }
 }

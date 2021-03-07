@@ -96,6 +96,9 @@ namespace big
         //xml read atributes
         bool readXMLBool(std::string nameOfNode);
 
+        //xml get all attributes in root node
+        std::vector<std::string> readXMLParameters();
+
         //xml read atributes String
         std::string readXMLString(std::string nameOfNode);
         
