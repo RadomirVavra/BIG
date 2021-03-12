@@ -198,41 +198,7 @@ namespace big
     template std::vector<double> BigCoreRead::getImage(uint64_t imageNum);
     template std::vector<float> BigCoreRead::getImage(uint64_t imageNum);
 
-    int BigCoreRead::readXMLInt(std::string nameOfNode)
-    {
-      pugi::xml_node root = doc.document_element();
-
-      return root.child(nameOfNode.c_str()).attribute("intVal").as_int();
-    }
-
-    double BigCoreRead::readXMLDouble(std::string nameOfNode)
-    {
-      pugi::xml_node root = doc.document_element();
-
-      return root.child(nameOfNode.c_str()).attribute("doubleVal").as_double();
-    }
-    bool BigCoreRead::readXMLBool(std::string nameOfNode)
-    {
-     
-      pugi::xml_node root = doc.document_element();
-
-      return root.child(nameOfNode.c_str()).attribute("boolVal").as_bool();
-    }
-
-
-    std::string BigCoreRead::readXMLString(std::string nameOfNode)
-    {
-      pugi::xml_node root = doc.document_element();
-
-      return root.child(nameOfNode.c_str()).attribute("stringVal").as_string();
-    }
-
-    std::vector<std::string> BigCoreRead::readXMLParameters() {
-        std::vector<std::string> params;
-        pugi::xml_node root = doc.document_element();
-        for (pugi::xml_node r : root) {
-            params.push_back(r.name());
-        }
-        return params;
+    std::string BigCoreRead::getXMLFile() {
+        return xmlFile;
     }
 }

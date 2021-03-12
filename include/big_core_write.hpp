@@ -49,42 +49,20 @@ namespace big
         template<typename T>
         void pushEntity(std::shared_ptr<T> data, DataTypes dataType);
 
-        //Add int atribute to xml
-        void AddAttributeToXmlInt(std::string nameOfAtribute, int  in_intVal, std::string hint);
+        //add XML file to XML chunk
+        void writeXML(std::string XMLfile);
 
-        //Add bool atribute to xml
-        void AddAttributeToXmlBool(std::string nameOfAtribute, bool in_boolVal, std::string hint);
 
-        //Add  double to xml
-        void AddAttributeToXmlDouble(std::string nameOfAtribute, double in_doubleVal, std::string hint);
-
-        //Add  string to xml
-        void AddAttributeToXmlString(std::string nameOfAtribute, std::string in_stringVal, std::string hint);
-
-        //Get XML string from root node
-        std::string GetXMLString();
-
-        //remove all nodes with this name
-        bool RemoveNodesByName(std::string nameOfAtribute);
-
-        //remove first node with this name
-        bool RemoveNodeByName(std::string nameOfAtribute);
-
-        //remove all child nodes of myRoot
-        void RemoveAllNodes();
 
     protected:
 
         // Write chunk's id, length and data.
         bool writeChunk(ChunkIds id);
 
-        //create xml document
-        void createXMLFile();
 
         //check if file exist
         inline bool file_exist(const std::string&name);
 
-      
 
         std::string remove_extension(const std::string& filename);
 

@@ -87,20 +87,11 @@ namespace big
         // Returns true if all data are in cache.
         bool isAllInCache() { return cache.getSize() == dataSize; }
 
-        //xml read atributes
-        int readXMLInt(std::string nameOfNode);
 
-        //xml read atributes
-        double readXMLDouble(std::string nameOfNode);
+        //get std::string with XMLFile
+        std::string getXMLFile();
 
-        //xml read atributes
-        bool readXMLBool(std::string nameOfNode);
 
-        //xml get all attributes in root node
-        std::vector<std::string> readXMLParameters();
-
-        //xml read atributes String
-        std::string readXMLString(std::string nameOfNode);
         
 
     protected:

@@ -28,9 +28,6 @@ namespace big
             if (!writeChunk(id)) throw "Error while writing file!";
         }
 
-        //create xml document
-        createXMLFile();
-
 
     }
 
@@ -159,14 +156,15 @@ namespace big
         }
         case ChunkIds::XML:
         {
-          std::string xmlFile = GetXMLString(); 
-          uint64_t l = (xmlFile.size() + 1) * sizeof(char);
-          uint64_t length = l + (l % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0);
-          file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
-          file.write(reinterpret_cast<const char*>(&length), sizeof(length));
-          file.write(reinterpret_cast<const char*>(&xmlFile[0]), l);
-          file.write(reinterpret_cast<const char*>(&zero), length - l);
-          break;
+            if (xmlFile != "") {
+                uint64_t l = (xmlFile.size() + 1) * sizeof(char);
+                uint64_t length = l + (l % CHUNK_LENGTH > 0 ? CHUNK_LENGTH - l % CHUNK_LENGTH : 0);
+                file.write(reinterpret_cast<char*>(&id), CHUNK_LENGTH);
+                file.write(reinterpret_cast<const char*>(&length), sizeof(length));
+                file.write(reinterpret_cast<const char*>(&xmlFile[0]), l);
+                file.write(reinterpret_cast<const char*>(&zero), length - l);
+            }
+            break;
         }
       /*  case ChunkIds::DATA_TYPE:
         {
@@ -190,49 +188,9 @@ namespace big
       return fileName.substr(0, lastdot);
       
     }
-    //create XML file
-    void BigCoreWrite::createXMLFile() {
-      if (!file_exist(xmlFileName)) {
-        auto declarationNode = doc.append_child(pugi::node_declaration);
-        declarationNode.append_attribute("version") = "1.0";
-        declarationNode.append_attribute("encoding") = "ISO-8859-1";
-        declarationNode.append_attribute("standalone") = "yes";
-        // A valid XML doc must contain a single root node of any name
-        auto root = doc.append_child("MyRoot");
-        // Save XML tree to file.
-        // Remark: second optional param is indent string to be used;
-        // default indentation is tab character.
-        //bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-        //if (!saveSucceeded)
-          //throw "Xml save error";
-      }
-     
-     
-    }
 
-    //write xml to string write
-    struct xml_string_writer : pugi::xml_writer
-    {
-      std::string result;
-
-      virtual void write(const void* data, size_t size)
-      {
-        result.append(static_cast<const char*>(data), size);
-      }
-    };
-
-    //xml node to string
-    std::string node_to_string(pugi::xml_node node)
-    {
-      xml_string_writer writer;
-      node.print(writer);
-
-      return writer.result;
-    }
-
-    //get string with XML document
-    std::string BigCoreWrite::GetXMLString() {
-      return node_to_string(doc.document_element());
+    void BigCoreWrite::writeXML(std::string XMLfile) {
+        xmlFile = XMLfile;
     }
 
     //check if the file exist
@@ -244,122 +202,5 @@ namespace big
       else {
         return false;
       }
-    }
-
-    void BigCoreWrite::AddAttributeToXmlInt(std::string nameOfAtribute, int  in_intVal, std::string hint) {
-      /*pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }*/
-      // A valid XML document must have a single root node
-      pugi::xml_node root = doc.document_element();
-      /// [load xml file]
-      /// [add child elements]
-      // Append some child elements below root
-      // Add as last element
-      pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
-      nodeChild.append_attribute("hint") = hint.c_str();
-      nodeChild.append_attribute("intVal") = in_intVal;
-     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-      if (!saveSucceeded)
-        throw "Xml save error";*/
-    }
-
-    void BigCoreWrite::AddAttributeToXmlBool(std::string nameOfAtribute, bool  in_boolVal, std::string hint) {
-     /* pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }*/
-      pugi::xml_node root = doc.document_element();
-
-      pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
-      nodeChild.append_attribute("hint") = hint.c_str();
-      nodeChild.append_attribute("boolVal") = in_boolVal;
-    /*  bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-      if (!saveSucceeded)
-        throw "Xml save error";*/
-    }
-
-    void BigCoreWrite::AddAttributeToXmlDouble(std::string nameOfAtribute, double in_doubleVal, std::string hint) {
-     /* pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }*/
-      pugi::xml_node root = doc.document_element();
-
-      pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
-      nodeChild.append_attribute("hint") = hint.c_str();
-      nodeChild.append_attribute("doubleVal") = in_doubleVal;
-     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-      if (!saveSucceeded)
-        throw "Xml save error";*/
-    }
-
-    void BigCoreWrite::AddAttributeToXmlString(std::string nameOfAtribute, std::string in_stringVal, std::string hint) {
-     /* pugi::xml_parse_result result = doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      if (!result)
-      {
-        throw "Parse error , character pos= " + result.offset;
-      }*/
-      pugi::xml_node root = doc.document_element();
-
-      pugi::xml_node nodeChild = root.append_child(nameOfAtribute.c_str());
-      nodeChild.append_attribute("hint") = hint.c_str();
-      nodeChild.append_attribute("stringVal") = in_stringVal.c_str();
-      /*bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-      if (!saveSucceeded)
-        throw "Xml save error";*/
-    }
-
-
-    bool BigCoreWrite::RemoveNodesByName(std::string nameOfAtribute) {
-      //doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      pugi::xml_node root = doc.document_element();
-
-      bool deleted = false;
-      while (root.remove_child(nameOfAtribute.c_str()))
-      {
-        deleted= true;
-      }
-     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-      if (!saveSucceeded)
-        throw "Xml save error";*/
-      /// [r
-      return deleted;
-    }
-    bool BigCoreWrite::RemoveNodeByName(std::string nameOfAtribute) {
-      doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      pugi::xml_node root = doc.document_element();
-
-      bool deleted = false;
-      if (root.remove_child(nameOfAtribute.c_str()))
-      {
-        deleted = true;
-      }
-     /* bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-      if (!saveSucceeded)
-        throw "Xml save error";*/
-      /// [r
-      return deleted;
-    }
-
-    void BigCoreWrite::RemoveAllNodes() {
-      doc.load_file(xmlFileName.c_str(), pugi::parse_default | pugi::parse_declaration);
-      pugi::xml_node root = doc.document_element();
-      for (pugi::xml_node child = root.first_child(); child; )
-      {
-        // Get next child node before possibly deleting current child
-        pugi::xml_node next = child.next_sibling();
-        //remove node
-        child.parent().remove_child(child);
-
-        child = next;
-      }
-      /*bool saveSucceeded = doc.save_file(xmlFileName.c_str(), PUGIXML_TEXT("  "));
-      if (!saveSucceeded)
-        throw "Xml save error";*/
     }
 }

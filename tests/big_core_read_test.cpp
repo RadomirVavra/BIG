@@ -2277,18 +2277,11 @@ namespace big_test
             Assert::AreEqual(2ull, big.getImageHeight());
             Assert::AreEqual(4ull, big.getImageWidth());
             Assert::AreEqual(1ull, big.getNumberOfPlanes());
-            big.AddAttributeToXmlInt("opacity", 20, "opacity of this material");
-            big.AddAttributeToXmlDouble("luminance", 21.15, "opacity of this material");
-            big.AddAttributeToXmlBool("isDark", false, "is this material dark");
-            
+            big.writeXML("test.xml");
           }
           {
             big::BigCoreRead big("testCoreRead_XMLread.big", false, CACHE_SIZE);
-            Assert::AreEqual(big.readXMLInt("opacity"), 20);
-            Assert::AreEqual(big.readXMLDouble("luminance"), 21.15);
-            Assert::AreEqual(big.readXMLBool("isDark"), false);
-            std::vector<std::string> params = big.readXMLParameters();
-            Assert::AreEqual(int(params.size()), 3);
+            Assert::AreEqual(std::string("test.xml"), big.getXMLFile());
           }
         }
 

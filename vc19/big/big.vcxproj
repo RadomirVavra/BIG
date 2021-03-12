@@ -35,8 +35,6 @@
     <ClInclude Include="..\..\include\big_core_write.hpp" />
     <ClInclude Include="..\..\include\big_core_read_info.hpp" />
     <ClInclude Include="..\..\include\half.hpp" />
-    <ClInclude Include="..\..\include\pugiconfig.hpp" />
-    <ClInclude Include="..\..\include\pugixml.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\big_cache.cpp" />
@@ -45,7 +43,6 @@
     <ClCompile Include="..\..\src\big_core_read.cpp" />
     <ClCompile Include="..\..\src\big_core_read_info.cpp" />
     <ClCompile Include="..\..\src\big_core_write.cpp" />
-    <ClCompile Include="..\..\src\pugixml.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{96DCF2A3-35D9-489E-8092-F045F4A0ECE4}</ProjectGuid>
@@ -85,6 +82,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='test|x64'">
     <PlatformToolset>v142</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
