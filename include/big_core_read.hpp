@@ -4,7 +4,7 @@
 
 #include "big_core_read_info.hpp"
 #include "big_cache_read.hpp"
-#include "pugixml.hpp"
+
 
 #include <fstream>
 #include <array>

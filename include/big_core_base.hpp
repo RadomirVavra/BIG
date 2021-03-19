@@ -3,7 +3,6 @@
 #define _BIG_CORE_BASE_H_
 
 #include "big_consts.hpp"
-#include "pugixml.hpp"
 
 #include <cstdint>
 #include <string>
@@ -140,8 +139,6 @@ namespace big
         uint64_t imageHeightOrder;
         uint64_t imageWidthOrder;
         uint64_t numberOfPlanesOrder;
-
-        pugi::xml_document doc;         //XML file
 
         //uint64_t indices[4];
 

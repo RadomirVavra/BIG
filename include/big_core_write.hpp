@@ -4,7 +4,6 @@
 
 #include "big_core_base.hpp"
 #include "half.hpp"
-#include "pugixml.hpp"
 
 #include <fstream>
 #include <memory>
