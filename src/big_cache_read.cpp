@@ -234,6 +234,8 @@ namespace big
                         pop(DataTypes::UINT8_T);
                         pop(DataTypes::UINT8_T);
                     }
+                } else {
+                    pop16();
                 }
             }
             else if (lru_list_8.size() >= 2) {
@@ -260,6 +262,8 @@ namespace big
                         pop(DataTypes::INT16_T);
                         pop(DataTypes::INT16_T);
                     }
+                } else {
+                    pop32();
                 }
             }
             else if (lru_list_16.size() >= 2) {
@@ -288,6 +292,8 @@ namespace big
                         pop(DataTypes::INT32_T); //pro rychlost by bylo lepší rozepsat všechny varianty do kódu, nebude se muset tolikrát procházet pøes switch
                         pop(DataTypes::INT32_T);
                     }
+                } else {
+                    pop64();
                 }
             }
             else if (lru_list_32.size() >= 2) {
